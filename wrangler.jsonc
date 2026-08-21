@@ -1,9 +1,13 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "influencer-rising-star",
+  "main": ".vercel/output/static/_worker.js/index.js",
   "compatibility_date": "2026-08-21",
   "compatibility_flags": [
     "nodejs_compat"
   ],
-  "pages_build_output_dir": ".vercel/output/static"
+  "assets": {
+    "directory": ".vercel/output/static",
+    "binding": "ASSETS"
+  }
 }
