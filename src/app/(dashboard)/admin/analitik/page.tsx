@@ -2,6 +2,7 @@ import { getAnalyticsData } from './actions'
 import AnalitikClient from './analitik-client'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
 
 export default async function AdminAnalitikPage() {
   const res = await getAnalyticsData()

@@ -2,6 +2,7 @@ import { getKaryawanList, getCabangList } from './actions'
 import KaryawanClient from './karyawan-client'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
 
 export default async function AdminKaryawanPage() {
   // Fetch initial data concurrently on server side

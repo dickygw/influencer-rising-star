@@ -315,15 +315,17 @@ export async function verifyScreenshotWithTesseract(
 ) {
   console.log('Running local Tesseract OCR on screenshot buffer...')
   try {
-    const { createWorker } = await import('tesseract.js')
-    const path = await import('path')
-    const langPath = path.join(process.cwd(), 'tessdata')
+    if (typeof process === 'undefined' || typeof process.cwd !== 'function') {
+      return {
+        success: false,
+        isValid: false,
+        extractedText: '',
+        reason: 'Lingkungan Edge aktif, delegasi otomatis ke Gemini Vision.',
+      }
+    }
 
-    // Inisialisasi Tesseract dengan memuat model bahasa lokal di folder tessdata
-    const worker = await createWorker('eng', 1, {
-      langPath: langPath,
-      cachePath: langPath,
-    })
+    const { createWorker } = await import('tesseract.js')
+    const worker = await createWorker('eng', 1)
     const ret = await worker.recognize(imageBuffer)
     await worker.terminate()
 

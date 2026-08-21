@@ -2,6 +2,7 @@ import { getIndividuLeaderboard, getCabangLeaderboard } from '../../leaderboard/
 import LeaderboardClient from '../../leaderboard/leaderboard-client'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
 
 export default async function KaryawanLeaderboardPage() {
   const [individuRes, cabangRes] = await Promise.all([
