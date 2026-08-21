@@ -198,7 +198,7 @@ export default function VerifikasiClient({ initialPending }: VerifikasiClientPro
 
         .modal-card {
           width: 100%;
-          max-width: 900px;
+          max-width: 920px;
           background: var(--gradient-card);
           border: 1px solid var(--border-default);
           border-radius: var(--radius-xl);
@@ -206,16 +206,21 @@ export default function VerifikasiClient({ initialPending }: VerifikasiClientPro
           overflow: hidden;
           position: relative;
           display: grid;
-          grid-template-columns: 1fr 1fr;
-          height: 80vh;
+          grid-template-columns: 1.1fr 1fr;
+          max-height: 85vh;
           animation: scaleIn 300ms var(--transition-spring);
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 860px) {
           .modal-card {
             grid-template-columns: 1fr;
-            height: 90vh;
+            max-height: 90vh;
             overflow-y: auto;
+          }
+
+          .modal-image-pane {
+            min-height: 280px;
+            max-height: 350px;
           }
         }
 
@@ -227,6 +232,7 @@ export default function VerifikasiClient({ initialPending }: VerifikasiClientPro
           position: relative;
           border-right: 1px solid var(--border-subtle);
           height: 100%;
+          overflow: hidden;
         }
 
         .modal-screenshot {
@@ -332,59 +338,94 @@ export default function VerifikasiClient({ initialPending }: VerifikasiClientPro
         </div>
       )}
 
-      <div className="verifikasi-header">
-        <h1 className="dashboard-greeting">Verifikasi Submission</h1>
-        <p className="dashboard-date">
+      <div className="verifikasi-header animate-fade-in" style={{ marginBottom: '1.5rem' }}>
+        <h1 className="dashboard-greeting" style={{ margin: 0 }}>Verifikasi Submission</h1>
+        <p className="dashboard-date" style={{ marginTop: '4px' }}>
           Tinjau bukti postingan sosial media dari seluruh karyawan di wilayah Anda.
         </p>
       </div>
 
-      <div className="table-wrapper">
-        <table className="verifikasi-table">
-          <thead>
-            <tr>
-              <th>Karyawan</th>
-              <th>Cabang</th>
-              <th>Platform</th>
-              <th>Jenis Aktivitas</th>
-              <th>Tanggal Kirim</th>
-              <th style={{ textAlign: 'right' }}>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pendingList.length > 0 ? (
-              pendingList.map((post) => (
-                <tr key={post.id}>
-                  <td>
-                    <div style={{ fontWeight: 600 }}>{post.user?.nama}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      NIP: {post.user?.nip}
-                    </div>
-                  </td>
-                  <td>{post.user?.cabang?.nama || '-'}</td>
-                  <td>
-                    <span className="role-badge role-badge--karyawan" style={{ textTransform: 'capitalize' }}>
-                      {post.platform}
-                    </span>
-                  </td>
-                  <td>{post.content_type?.nama}</td>
-                  <td>{formatDate(post.submitted_at)}</td>
-                  <td style={{ textAlign: 'right' }}>
-                    <button className="btn-review" onClick={() => setSelectedPost(post)}>
-                      🔎 Tinjau
-                    </button>
+      <div className="shadcn-card animate-fade-in" style={{ animationDelay: '100ms' }}>
+        <div className="shadcn-table-wrapper">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th style={{ minWidth: '240px' }}>Karyawan & NIP</th>
+                <th style={{ minWidth: '160px' }}>Kantor Cabang</th>
+                <th style={{ minWidth: '130px' }}>Platform</th>
+                <th style={{ minWidth: '160px' }}>Jenis Konten</th>
+                <th style={{ minWidth: '150px' }}>Waktu Kirim</th>
+                <th style={{ minWidth: '100px', textAlign: 'right' }}>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pendingList.length > 0 ? (
+                pendingList.map((post) => {
+                  const initials = post.user?.nama
+                    ? post.user.nama
+                        .split(' ')
+                        .filter(Boolean)
+                        .slice(0, 2)
+                        .map((w: string) => w[0])
+                        .join('')
+                        .toUpperCase()
+                    : 'KY'
+
+                  return (
+                    <tr key={post.id}>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div className="shadcn-avatar">
+                            {initials}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.9375rem' }}>
+                              {post.user?.nama}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                              NIP: {post.user?.nip}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+                          {post.user?.cabang?.nama || '-'}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`shadcn-badge ${post.platform === 'instagram' ? 'shadcn-badge-purple' : post.platform === 'tiktok' ? 'shadcn-badge-secondary' : 'shadcn-badge-blue'}`} style={{ textTransform: 'capitalize' }}>
+                          {post.platform === 'instagram' ? '📸 Instagram' : post.platform === 'tiktok' ? '📱 TikTok' : post.platform}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="metric-chip metric-chip--green" style={{ fontSize: '0.75rem' }}>
+                          📌 {post.content_type?.nama}
+                        </span>
+                      </td>
+                      <td>
+                        <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+                          {formatDate(post.submitted_at)}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <button className="shadcn-btn-outline" onClick={() => setSelectedPost(post)}>
+                          🔎 Tinjau
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })
+              ) : (
+                <tr>
+                  <td colSpan={6} style={{ padding: '3.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                    🎉 Hore! Tidak ada antrean submission yang pending saat ini.
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={6} style={{ padding: 'var(--spacing-3xl)', textAlign: 'center', color: 'var(--text-muted)' }}>
-                  🎉 Hore! Tidak ada antrean submission yang pending saat ini.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Verification Dialog Modal */}

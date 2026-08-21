@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import KaryawanModal from './karyawan-modal'
-import { getKaryawanList, bulkUploadKaryawan, syncEmployeeEngagement } from './actions'
+import { getKaryawanList, bulkUploadKaryawan } from './actions'
 import ConfirmationDialog from '../../confirmation-dialog'
 
 type KaryawanClientProps = {
@@ -17,7 +17,6 @@ export default function KaryawanClient({
   const [karyawanList, setKaryawanList] = useState(initialKaryawan)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCabang, setSelectedCabang] = useState('')
-  const [syncingId, setSyncingId] = useState<string | null>(null)
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -52,23 +51,6 @@ export default function KaryawanClient({
     }
   }
 
-  const handleSync = async (employeeId: string) => {
-    setSyncingId(employeeId)
-    try {
-      const res = await syncEmployeeEngagement(employeeId)
-      if (res.success) {
-        alert(res.message)
-        await handleRefresh()
-      } else {
-        alert(`Gagal sinkronisasi: ${res.error}`)
-      }
-    } catch (err: any) {
-      alert(`Terjadi kesalahan: ${err.message}`)
-    } finally {
-      setSyncingId(null)
-    }
-  }
-
   // Filter employees locally for speed
   const filteredKaryawan = karyawanList.filter((item) => {
     const matchSearch =
@@ -84,13 +66,13 @@ export default function KaryawanClient({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <span className="status-pill status-pill--active">Aktif</span>
+        return <span className="shadcn-badge shadcn-badge-success">● Aktif</span>
       case 'inactive':
-        return <span className="status-pill status-pill--inactive">Nonaktif</span>
+        return <span className="shadcn-badge shadcn-badge-secondary">● Nonaktif</span>
       case 'suspended':
-        return <span className="status-pill status-pill--suspended">Ditangguhkan</span>
+        return <span className="shadcn-badge shadcn-badge-danger">● Ditangguhkan</span>
       default:
-        return <span className="status-pill">{status}</span>
+        return <span className="shadcn-badge shadcn-badge-secondary">{status}</span>
     }
   }
 
@@ -107,175 +89,81 @@ export default function KaryawanClient({
         }
 
         .btn-add-karyawan {
-          padding: 0.75rem 1.25rem;
-          background: var(--gradient-green);
-          color: var(--text-on-gold);
-          font-weight: 700;
+          padding: 0.625rem 1.25rem;
+          background: linear-gradient(135deg, var(--green-primary) 0%, #0d6b36 100%);
+          color: #ffffff;
+          font-weight: 600;
           font-size: 0.875rem;
           border-radius: var(--radius-md);
-          box-shadow: var(--shadow-green);
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          gap: var(--spacing-sm);
-          transition: all var(--transition-fast);
+          gap: 6px;
+          border: 1px solid var(--border-gold);
+          cursor: pointer;
+          transition: all 0.15s ease;
         }
 
         .btn-add-karyawan:hover {
+          opacity: 0.95;
           transform: translateY(-1px);
         }
 
-        /* Filter Controls */
         .filter-container {
+          background: var(--bg-secondary);
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-xl);
+          padding: 0.875rem 1.25rem;
+          margin-bottom: 1.5rem;
           display: flex;
-          gap: var(--spacing-md);
-          margin-bottom: var(--spacing-xl);
+          gap: 1rem;
+          align-items: center;
           flex-wrap: wrap;
         }
 
         .search-input-wrapper {
-          flex: 1;
-          min-width: 250px;
           position: relative;
+          flex: 1;
+          min-width: 240px;
         }
 
         .search-icon {
           position: absolute;
-          left: var(--spacing-md);
+          left: 12px;
           top: 50%;
           transform: translateY(-50%);
           color: var(--text-muted);
-          pointer-events: none;
+          font-size: 0.875rem;
         }
 
-        .search-input {
+        .filter-search-input {
           width: 100%;
-          padding: 0.625rem 1rem 0.625rem 2.5rem;
-          background: var(--bg-secondary);
+          background: var(--bg-card);
           border: 1px solid var(--border-default);
           border-radius: var(--radius-md);
+          padding: 0.5rem 1rem 0.5rem 2.25rem;
           color: var(--text-primary);
+          font-size: 0.875rem;
+        }
+
+        .filter-search-input:focus {
           outline: none;
-          transition: all var(--transition-fast);
+          border-color: var(--green-primary);
         }
 
-        .search-input:focus {
-          border-color: var(--green-light);
-          box-shadow: 0 0 0 3px rgba(117, 192, 68, 0.1);
-        }
-
-        .select-filter {
-          padding: 0.625rem 1rem;
-          background: var(--bg-secondary);
+        .filter-select {
+          background: var(--bg-card);
           border: 1px solid var(--border-default);
           border-radius: var(--radius-md);
+          padding: 0.5rem 1rem;
           color: var(--text-primary);
-          outline: none;
+          font-size: 0.875rem;
           min-width: 180px;
-          appearance: auto;
+          cursor: pointer;
         }
 
-        .select-filter:focus {
-          border-color: var(--green-light);
-        }
-
-        /* Table Design */
-        .table-wrapper {
-          background: var(--gradient-card);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-xl);
-          overflow: hidden;
-          box-shadow: var(--shadow-lg);
-        }
-
-        .karyawan-table {
-          width: 100%;
-          border-collapse: collapse;
-          text-align: left;
-        }
-
-        .karyawan-table th {
-          padding: var(--spacing-lg) var(--spacing-xl);
-          background: rgba(0, 0, 0, 0.2);
-          color: var(--text-secondary);
-          font-size: 0.8125rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          border-bottom: 1px solid var(--border-subtle);
-        }
-
-        .karyawan-table td {
-          padding: var(--spacing-lg) var(--spacing-xl);
-          border-bottom: 1px solid var(--border-subtle);
-          color: var(--text-primary);
-          font-size: 0.9375rem;
-        }
-
-        .karyawan-table tr:last-child td {
-          border-bottom: none;
-        }
-
-        .karyawan-table tr:hover td {
-          background: rgba(255, 255, 255, 0.01);
-        }
-
-        .emp-name-cell {
-          font-weight: 600;
-          color: var(--text-primary);
-        }
-
-        .emp-sub-cell {
-          font-size: 0.75rem;
-          color: var(--text-muted);
-          margin-top: 2px;
-        }
-
-        /* Status Pills */
-        .status-pill {
-          display: inline-flex;
-          padding: 0.25rem 0.625rem;
-          border-radius: var(--radius-full);
-          font-size: 0.75rem;
-          font-weight: 600;
-        }
-
-        .status-pill--active {
-          background: rgba(13, 169, 77, 0.15);
-          color: var(--green-light);
-          border: 1px solid rgba(13, 169, 77, 0.3);
-        }
-
-        .status-pill--inactive {
-          background: rgba(255, 255, 255, 0.05);
-          color: var(--text-secondary);
-          border: 1px solid var(--border-default);
-        }
-
-        .status-pill--suspended {
-          background: rgba(239, 68, 68, 0.1);
-          color: var(--error);
-          border: 1px solid rgba(239, 68, 68, 0.3);
-        }
-
-        .btn-action-edit {
-          padding: 0.375rem 0.75rem;
-          border: 1px solid var(--border-default);
-          border-radius: var(--radius-md);
-          color: var(--gold-400);
-          font-size: 0.8125rem;
-          font-weight: 600;
-          transition: all var(--transition-fast);
-        }
-
-        .btn-action-edit:hover {
-          background: rgba(251, 197, 19, 0.1);
-          border-color: var(--gold-400);
-        }
-
-        .empty-state {
-          padding: var(--spacing-3xl);
-          text-align: center;
-          color: var(--text-secondary);
+        .filter-select:focus {
+          outline: none;
+          border-color: var(--green-primary);
         }
       `}</style>
 
@@ -286,10 +174,10 @@ export default function KaryawanClient({
             Daftar karyawan yang terdaftar di bawah Kantor Wilayah Anda.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
+        <div style={{ display: 'flex', gap: 'var(--spacing-md)', flexWrap: 'wrap' }}>
           <button
             className="btn-add-karyawan"
-            style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', boxShadow: 'none' }}
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', boxShadow: 'none', whiteSpace: 'nowrap' }}
             onClick={() => {
               setUploadResult(null)
               setCsvFile(null)
@@ -301,6 +189,7 @@ export default function KaryawanClient({
           </button>
           <button
             className="btn-add-karyawan"
+            style={{ whiteSpace: 'nowrap' }}
             onClick={() => {
               setEditingKaryawan(null)
               setIsModalOpen(true)
@@ -313,20 +202,20 @@ export default function KaryawanClient({
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="filter-container animate-fade-in" style={{ animationDelay: '100ms' }}>
+      <div className="filter-container animate-fade-in">
         <div className="search-input-wrapper">
           <span className="search-icon">🔍</span>
           <input
             type="text"
-            className="search-input"
-            placeholder="Cari NIP, nama, atau jabatan..."
+            className="filter-search-input"
+            placeholder="Cari berdasarkan Nama, NIP, Jabatan..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
         <select
-          className="select-filter"
+          className="filter-select"
           value={selectedCabang}
           onChange={(e) => setSelectedCabang(e.target.value)}
         >
@@ -339,128 +228,78 @@ export default function KaryawanClient({
         </select>
       </div>
 
-      {/* Employees Table */}
-      <div className="table-wrapper animate-fade-in" style={{ animationDelay: '200ms' }}>
-        <div className="responsive-table-wrapper">
-          <table className="karyawan-table">
+      {/* Employees Table - Shadcn UI */}
+      <div className="shadcn-card animate-fade-in" style={{ animationDelay: '150ms' }}>
+        <div className="shadcn-table-wrapper">
+          <table className="data-table">
             <thead>
               <tr>
-                <th>NIP / Karyawan</th>
-                <th>Cabang</th>
-                <th>Jabatan</th>
-                <th>Akun Sosmed</th>
-                <th>Engagement Konten</th>
-                <th>Status</th>
-                <th style={{ textAlign: 'right' }}>Aksi</th>
+                <th style={{ minWidth: '260px' }}>NIP & Nama Karyawan</th>
+                <th style={{ minWidth: '160px' }}>Kantor Cabang</th>
+                <th style={{ minWidth: '140px' }}>Jabatan</th>
+                <th style={{ minWidth: '180px' }}>Akun Sosmed</th>
+                <th style={{ minWidth: '110px', textAlign: 'center' }}>Status</th>
+                <th style={{ minWidth: '90px', textAlign: 'right' }}>Aksi</th>
               </tr>
             </thead>
             <tbody>
               {filteredKaryawan.length > 0 ? (
                 filteredKaryawan.map((karyawan) => {
-                  // Compute employee total engagement stats
-                  let totalLikes = 0
-                  let totalViews = 0
-                  let totalPosts = 0
-
-                  if (karyawan.posts && karyawan.posts.length > 0) {
-                    karyawan.posts.forEach((post: any) => {
-                      if (post.status === 'approved') {
-                        totalPosts++
-                        const stats = post.post_engagement_stats
-                        if (stats && stats.length > 0) {
-                          stats.forEach((stat: any) => {
-                            totalLikes += stat.likes || 0
-                            totalViews += stat.views || 0
-                          })
-                        }
-                      }
-                    })
-                  }
+                  const initials = karyawan.nama
+                    .split(' ')
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map((w: string) => w[0])
+                    .join('')
+                    .toUpperCase()
 
                   return (
                     <tr key={karyawan.id}>
                       <td>
-                        <div className="emp-name-cell">{karyawan.nama}</div>
-                        <div className="emp-sub-cell">NIP: {karyawan.nip}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div className="shadcn-avatar">
+                            {initials}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.9375rem' }}>{karyawan.nama}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>NIP: {karyawan.nip}</div>
+                          </div>
+                        </div>
                       </td>
-                      <td>{karyawan.cabang?.nama || '-'}</td>
-                      <td>{karyawan.jabatan || '-'}</td>
+                      <td>
+                        <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+                          {karyawan.cabang?.nama || '-'}
+                        </span>
+                      </td>
+                      <td>
+                        <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+                          {karyawan.jabatan || '-'}
+                        </span>
+                      </td>
                       <td>
                         {karyawan.social_accounts && karyawan.social_accounts.length > 0 ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                             {karyawan.social_accounts.map((acc: any) => (
                               <span 
                                 key={`${acc.platform}-${acc.handle}`} 
-                                style={{ 
-                                  fontSize: '0.75rem', 
-                                  display: 'inline-flex', 
-                                  alignItems: 'center', 
-                                  gap: '4px',
-                                  background: 'var(--bg-secondary)',
-                                  padding: '2px 6px',
-                                  borderRadius: 'var(--radius-sm)',
-                                  border: '1px solid var(--border-default)',
-                                  width: 'fit-content'
-                                }}
+                                className="shadcn-badge shadcn-badge-secondary"
+                                style={{ fontSize: '0.75rem' }}
                               >
                                 {acc.platform === 'instagram' ? '📸' : 
                                  acc.platform === 'tiktok' ? '📱' : 
                                  acc.platform === 'facebook' ? '👥' : '🐦'}
-                                <strong style={{ color: 'var(--text-primary)' }}>@{acc.handle}</strong>
+                                <span>@{acc.handle.replace(/^@/, '')}</span>
                               </span>
                             ))}
                           </div>
                         ) : (
-                          <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Belum tautkan</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Belum tertaut</span>
                         )}
                       </td>
-                      <td>
-                        {totalPosts > 0 ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <div>
-                              <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--green-light)' }}>👍 {totalLikes} Likes</div>
-                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>👀 {totalViews} Views ({totalPosts} Post)</div>
-                            </div>
-                            <button
-                              onClick={() => setConfirmData({
-                                isOpen: true,
-                                type: 'info',
-                                title: 'Sinkronisasi Engagement?',
-                                message: `Apakah Anda yakin ingin menyinkronkan data interaksi (Likes/Views) secara live menggunakan Instagram Scraper untuk karyawan "${karyawan.nama}"?`,
-                                confirmText: 'Ya, Sinkronkan',
-                                onConfirm: async () => {
-                                  setConfirmData(prev => ({ ...prev, isOpen: false }))
-                                  await handleSync(karyawan.id)
-                                }
-                              })}
-                              disabled={syncingId === karyawan.id}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                background: 'var(--bg-secondary)',
-                                border: '1px solid var(--border-default)',
-                                borderRadius: '4px',
-                                padding: '2px 8px',
-                                fontSize: '0.7rem',
-                                color: 'var(--text-primary)',
-                                cursor: syncingId === karyawan.id ? 'not-allowed' : 'pointer',
-                                width: 'fit-content',
-                                transition: 'all 0.2s',
-                              }}
-                              title="Sinkronisasikan engagement likes/views postingan karyawan secara live dari Instagram"
-                            >
-                              {syncingId === karyawan.id ? '🌀 Syncing...' : '🔄 Sync Engagement'}
-                            </button>
-                          </div>
-                        ) : (
-                          <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>-</span>
-                        )}
-                      </td>
-                      <td>{getStatusBadge(karyawan.status)}</td>
+                      <td style={{ textAlign: 'center' }}>{getStatusBadge(karyawan.status)}</td>
                       <td style={{ textAlign: 'right' }}>
                         <button
-                          className="btn-action-edit"
+                          className="shadcn-btn-outline"
                           onClick={() => {
                             setEditingKaryawan(karyawan)
                             setIsModalOpen(true)
@@ -474,7 +313,7 @@ export default function KaryawanClient({
                 })
               ) : (
                 <tr>
-                  <td colSpan={7} className="empty-state">
+                  <td colSpan={6} style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
                     🔍 Tidak ada karyawan ditemukan yang cocok dengan kriteria filter.
                   </td>
                 </tr>
@@ -646,7 +485,7 @@ export default function KaryawanClient({
         message={confirmData.message}
         confirmText={confirmData.confirmText}
         type={confirmData.type}
-        isLoading={syncingId !== null}
+        isLoading={false}
       />
     </div>
   )

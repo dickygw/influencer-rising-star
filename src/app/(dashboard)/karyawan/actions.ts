@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getPointsSummary } from './riwayat/actions'
-import { getDailyQuota } from './submission/actions'
 
 async function getKaryawanContext() {
   const supabase = await createClient()

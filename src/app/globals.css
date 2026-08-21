@@ -813,39 +813,6 @@ input, textarea, select {
 }
 
 /* =========================================================
-   RESPONSIVE
-   ========================================================= */
-
-@media (max-width: 768px) {
-  .login-card {
-    padding: var(--spacing-xl);
-    max-width: 100%;
-    border-radius: var(--radius-xl);
-  }
-
-  .sidebar {
-    transform: translateX(-100%);
-    top: 60px !important;
-    height: calc(100vh - 60px) !important;
-  }
-
-  .sidebar--open {
-    transform: translateX(0);
-  }
-
-  .dashboard-main {
-    margin-left: 0;
-    margin-top: 60px;
-    padding: var(--spacing-lg);
-    min-height: calc(100vh - 60px);
-  }
-
-  .dashboard-greeting {
-    font-size: 1.375rem;
-  }
-}
-
-/* =========================================================
    TOPBAR & SIDEBAR MODIFICATIONS (PEA 2026 STYLE)
    ========================================================= */
 
@@ -890,6 +857,8 @@ input, textarea, select {
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .topbar-subtitle {
@@ -898,7 +867,9 @@ input, textarea, select {
   text-transform: uppercase;
   font-weight: 700;
   letter-spacing: 0.05em;
-  margin-top: 2px;
+  margin-top: 1px;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 /* Sidebar Countdowns & Categories */
@@ -1470,5 +1441,396 @@ input::placeholder, textarea::placeholder {
   80% { width: 85%; }
   100% { width: 98%; }
 }
+
+/* =========================================================
+   SHADCN/UI STYLE DATA TABLE & COMPONENTS
+   ========================================================= */
+
+.shadcn-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2), 0 1px 2px -1px rgba(0, 0, 0, 0.2);
+}
+
+.shadcn-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.875rem;
+  min-width: 820px;
+}
+
+.data-table thead tr {
+  border-bottom: 1px solid var(--border-default);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.data-table th {
+  padding: 0.875rem 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.data-table tbody tr {
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background-color 0.15s ease;
+}
+
+.data-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.data-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.data-table td {
+  padding: 1rem 1.25rem;
+  vertical-align: middle;
+}
+
+/* Shadcn Metric Badge & Chips */
+.metric-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.metric-chip--gold {
+  background: rgba(230, 184, 32, 0.12);
+  color: var(--gold-400);
+  border-color: rgba(230, 184, 32, 0.25);
+}
+
+.metric-chip--blue {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.metric-chip--purple {
+  background: rgba(168, 85, 247, 0.12);
+  color: #c084fc;
+  border-color: rgba(168, 85, 247, 0.25);
+}
+
+.metric-chip--green {
+  background: rgba(0, 186, 136, 0.12);
+  color: var(--green-light);
+  border-color: rgba(0, 186, 136, 0.25);
+}
+
+.metric-chip--gray {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+  border-color: var(--border-default);
+}
+
+/* Shadcn Badges */
+.shadcn-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.shadcn-badge-success {
+  background: rgba(0, 186, 136, 0.12);
+  color: var(--green-light);
+  border: 1px solid rgba(0, 186, 136, 0.25);
+}
+
+.shadcn-badge-warning {
+  background: rgba(230, 184, 32, 0.12);
+  color: var(--gold-400);
+  border: 1px solid rgba(230, 184, 32, 0.25);
+}
+
+.shadcn-badge-danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.shadcn-badge-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+}
+
+.shadcn-badge-blue {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.shadcn-badge-purple {
+  background: rgba(168, 85, 247, 0.12);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+}
+
+/* Shadcn Buttons */
+.shadcn-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0.45rem 0.875rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.shadcn-btn-outline:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-subtle);
+  color: #ffffff;
+}
+
+.shadcn-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.shadcn-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+/* Shadcn Avatar */
+.shadcn-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--green-primary) 0%, #0d6b36 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  flex-shrink: 0;
+  border: 1px solid var(--border-gold);
+}
+
+/* =========================================================
+   UNIVERSAL RESPONSIVE BREAKPOINTS (LAPTOP / TABLET / MOBILE)
+   ========================================================= */
+
+/* Custom Smooth Table Scrollbar */
+.shadcn-table-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.shadcn-table-wrapper::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 4px;
+}
+
+.shadcn-table-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 4px;
+}
+
+.shadcn-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.7);
+}
+
+/* KPI Grids Responsive Layout */
+.analytics-kpi-grid {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 1280px) {
+  .analytics-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .analytics-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Laptop & Desktop adjustments (1025px - 1366px) */
+@media (max-width: 1200px) {
+  .sidebar {
+    width: 240px;
+  }
+
+  .dashboard-main {
+    margin-left: 240px;
+    padding: 1.25rem 1.5rem;
+  }
+
+  .dashboard-greeting {
+    font-size: 1.5rem;
+  }
+}
+
+/* Tablet & Compact Laptop adjustments (769px - 1024px) */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 220px;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .dashboard-main {
+    margin-left: 220px;
+    padding: 1.25rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Mobile & Small Tablet adjustments (< 768px) */
+@media (max-width: 768px) {
+  .login-card {
+    padding: var(--spacing-xl);
+    max-width: 100%;
+    border-radius: var(--radius-xl);
+  }
+
+  .topbar {
+    padding: 0 0.875rem;
+    height: 56px;
+  }
+
+  .topbar-brand {
+    gap: 8px;
+  }
+
+  .topbar-logo-img {
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+  }
+
+  .topbar-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+  }
+
+  .topbar-subtitle {
+    font-size: 0.625rem;
+  }
+
+  .topbar-kanwil-info,
+  .topbar-divider {
+    display: none;
+  }
+
+  .sidebar {
+    transform: translateX(-100%);
+    width: 260px !important;
+    top: 56px !important;
+    height: calc(100vh - 56px) !important;
+    z-index: 100;
+    box-shadow: var(--shadow-xl);
+  }
+
+  .sidebar--open {
+    transform: translateX(0);
+  }
+
+  .dashboard-main {
+    margin-left: 0 !important;
+    margin-top: 56px;
+    padding: 1rem;
+    min-height: calc(100vh - 56px);
+    width: 100%;
+  }
+
+  .dashboard-greeting {
+    font-size: 1.25rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-container {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  .search-input-wrapper {
+    width: 100%;
+  }
+
+  .filter-select {
+    width: 100%;
+  }
+}
+
+/* Extra Small Smartphones (< 440px) */
+@media (max-width: 440px) {
+  .topbar {
+    padding: 0 0.625rem;
+  }
+
+  .topbar-brand {
+    gap: 6px;
+  }
+
+  .topbar-title {
+    font-size: 0.875rem;
+  }
+
+  .topbar-subtitle {
+    font-size: 0.5625rem;
+  }
+}
+
+
+
+
 
 

@@ -47,20 +47,23 @@ export default function LaporanClient({ stats, branchData }: LaporanClientProps)
         }
 
         .btn-export {
-          padding: 0.75rem 1.25rem;
-          background: var(--gradient-green);
-          color: var(--text-on-gold);
-          font-weight: 700;
+          padding: 0.625rem 1.25rem;
+          background: linear-gradient(135deg, var(--green-primary) 0%, #0d6b36 100%);
+          color: #ffffff;
+          font-weight: 600;
           font-size: 0.875rem;
           border-radius: var(--radius-md);
-          box-shadow: var(--shadow-green);
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          gap: var(--spacing-sm);
-          transition: all var(--transition-fast);
+          gap: 6px;
+          border: 1px solid var(--border-gold);
+          white-space: nowrap;
+          cursor: pointer;
+          transition: all 0.15s ease;
         }
 
         .btn-export:hover {
+          opacity: 0.95;
           transform: translateY(-1px);
         }
 
@@ -72,7 +75,13 @@ export default function LaporanClient({ stats, branchData }: LaporanClientProps)
           margin-bottom: var(--spacing-2xl);
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
+          .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        @media (max-width: 640px) {
           .stats-grid {
             grid-template-columns: 1fr;
           }
@@ -214,41 +223,63 @@ export default function LaporanClient({ stats, branchData }: LaporanClientProps)
       </div>
 
       {/* Branch Table */}
-      <h2 className="table-title animate-fade-in" style={{ animationDelay: '100ms' }}>
+      <h2 className="table-title animate-fade-in" style={{ animationDelay: '100ms', fontSize: '1.125rem', fontWeight: 700, marginBottom: '1rem' }}>
         📈 Rekap Kinerja Kantor Cabang
       </h2>
 
-      <div className="table-wrapper animate-fade-in" style={{ animationDelay: '200ms' }}>
-        <table className="laporan-table">
-          <thead>
-            <tr>
-              <th>Kode</th>
-              <th>Nama Kantor Cabang</th>
-              <th>Jumlah Post</th>
-              <th>Total Poin</th>
-              <th>Partisipan Aktif</th>
-            </tr>
-          </thead>
-          <tbody>
-            {branchData.length > 0 ? (
-              branchData.map((branch) => (
-                <tr key={branch.id}>
-                  <td className="bold-cell">{branch.kode}</td>
-                  <td>{branch.nama}</td>
-                  <td>{branch.totalPosts} Postingan</td>
-                  <td className="points-val-cell">{branch.totalPoints} Poin</td>
-                  <td>{branch.activeParticipants} Orang</td>
-                </tr>
-              ))
-            ) : (
+      <div className="shadcn-card animate-fade-in" style={{ animationDelay: '150ms' }}>
+        <div className="shadcn-table-wrapper">
+          <table className="data-table">
+            <thead>
               <tr>
-                <td colSpan={5} style={{ padding: 'var(--spacing-3xl)', textAlign: 'center', color: 'var(--text-muted)' }}>
-                  Belum ada data aktivitas cabang.
-                </td>
+                <th style={{ width: '100px', textAlign: 'center' }}>Kode Cabang</th>
+                <th style={{ minWidth: '240px' }}>Nama Kantor Cabang</th>
+                <th style={{ minWidth: '140px', textAlign: 'center' }}>Jumlah Konten</th>
+                <th style={{ minWidth: '140px', textAlign: 'center' }}>Total Poin</th>
+                <th style={{ minWidth: '140px', textAlign: 'center' }}>Influencer Aktif</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {branchData.length > 0 ? (
+                branchData.map((branch) => (
+                  <tr key={branch.id}>
+                    <td style={{ textAlign: 'center' }}>
+                      <span className="shadcn-badge shadcn-badge-secondary" style={{ fontFamily: 'monospace', fontWeight: 700 }}>
+                        {branch.kode}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.9375rem' }}>
+                        {branch.nama}
+                      </div>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span className="metric-chip metric-chip--gray">
+                        📝 {branch.totalPosts} Post
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span className="metric-chip metric-chip--gold">
+                        ⭐ {branch.totalPoints.toLocaleString('id-ID')} Poin
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span className="metric-chip metric-chip--green">
+                        👥 {branch.activeParticipants} Orang
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} style={{ padding: '3.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                    Belum ada data aktivitas cabang.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )

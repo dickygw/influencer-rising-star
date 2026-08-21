@@ -125,6 +125,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
           icon: '✅'
         },
         { href: '/admin/karyawan', label: 'Kelola Karyawan', icon: '👥', badge: 'Kelola', badgeColor: 'gray' },
+        { href: '/admin/analitik', label: 'Data Analitik', icon: '📈', badge: 'Live', badgeColor: 'gold' },
         { href: '/admin/leaderboard', label: 'Leaderboard', icon: '🏆', badge: '🏆', badgeColor: 'gray' },
         { href: '/admin/laporan', label: 'Laporan & Rekap', icon: '📊', badge: 'Excel', badgeColor: 'green' }
       ]
@@ -147,7 +148,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
             ☰
           </button>
           <div className="topbar-logo-img">⭐</div>
-          <div>
+          <div className="topbar-text-group">
             <div className="topbar-title">Influencer Rising Star</div>
             <div className="topbar-subtitle">
               {isAdmin ? 'Dashboard Admin' : 'Dashboard Peserta'}
@@ -155,14 +156,14 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
+        <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)' }}>
           {/* Notification bell */}
           <NotificationBell />
           
-          <div style={{ width: '1px', height: '24px', background: 'var(--border-subtle)' }} />
+          <div className="topbar-divider" style={{ width: '1px', height: '24px', background: 'var(--border-subtle)' }} />
 
           {/* Quick info */}
-          <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+          <span className="topbar-kanwil-info" style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
             {user.kanwilName || 'Pegadaian'}
           </span>
         </div>

@@ -85,12 +85,7 @@ export async function getKaryawanList() {
         status,
         role,
         cabang:cabang_id (id, nama),
-        social_accounts (platform, handle, is_verified),
-        posts:posts!user_id (
-          id,
-          status,
-          post_engagement_stats (likes, comments, views)
-        )
+        social_accounts (platform, handle, is_verified)
       `)
       .eq('kanwil_id', kanwilId)
       .eq('role', 'karyawan') // Only manage employees (not other admins)
@@ -434,12 +429,12 @@ export async function bulkUploadKaryawan(csvText: string) {
   }
 }
 
-// =========================================================================
-// FUNGSI: syncEmployeeEngagement
-// Kegunaan: Sinkronisasi ulang metrik interaksi (likes, comments, views) dari seluruh
-//           postingan Instagram karyawan yang sudah disetujui (Approved).
-//           Fungsi ini dipicu secara manual (on-demand) oleh Admin Kanwil.
-// =========================================================================
+// Helper untuk mengekstrak shortcode postingan Instagram
+function extractInstagramShortcode(url: string): string | null {
+  const match = url.match(/\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/)
+  return match ? match[1] : null
+}
+
 export async function syncEmployeeEngagement(employeeId: string) {
   try {
     const { supabase } = await getAdminContext() // Pastikan pengakses adalah Admin Kanwil sah
@@ -473,28 +468,41 @@ export async function syncEmployeeEngagement(employeeId: string) {
       .eq('platform', 'instagram')
       .maybeSingle()
 
-    const handle = socialAccount?.handle || 'instagram'
+    const handle = socialAccount?.handle?.replace(/^@/, '') || 'instagram'
+    const directUrls = posts.map(p => p.post_url.trim()).filter(Boolean)
+
+    console.log(`Syncing stats for employee ${employeeId} (${directUrls.length} posts)...`)
+
+    // Panggil Apify secara batch untuk seluruh URL postingan sekaligus (jauh lebih cepat & efisien)
+    const run = await client.actor('apify/instagram-post-scraper').call({
+      username: [handle],
+      directUrls,
+      resultsLimit: Math.max(directUrls.length, 10)
+    })
+
+    const { items } = await client.dataset(run.defaultDatasetId).listItems()
+    console.log(`Apify returned ${items?.length || 0} items for employee ${employeeId}`)
 
     let updatedCount = 0
 
-    // Loop data untuk setiap postingan approved guna mengambil metrik terbaru dari Instagram via Apify
+    // Loop data untuk setiap postingan approved guna memperbarui metrik ke database
     for (const post of posts) {
       try {
-        console.log(`Syncing stats for post ${post.id}: ${post.post_url}`)
-        
-        const run = await client.actor('apify/instagram-post-scraper').call({
-          username: [handle.replace(/^@/, '')],
-          directUrls: [post.post_url],
-          resultsLimit: 1
+        const postShortcode = extractInstagramShortcode(post.post_url)
+        const matchedItem = (items || []).find((item: any) => {
+          if (postShortcode && (item.shortCode === postShortcode || item.url?.includes(postShortcode))) {
+            return true
+          }
+          if (item.url && post.post_url.includes(item.url)) {
+            return true
+          }
+          return false
         })
 
-        const { items } = await client.dataset(run.defaultDatasetId).listItems()
-        const postData = items[0]
-
-        if (postData) {
-          const likes = postData.likesCount || 0
-          const comments = postData.commentsCount || 0
-          const views = postData.playCount || postData.videoViewCount || 0
+        if (matchedItem) {
+          const likes = matchedItem.likesCount || 0
+          const comments = matchedItem.commentsCount || 0
+          const views = matchedItem.videoPlayCount || matchedItem.playCount || matchedItem.videoViewCount || 0
 
           // Periksa apakah statistik postingan sudah ada di database
           const { data: existingStat } = await supabase
@@ -524,7 +532,8 @@ export async function syncEmployeeEngagement(employeeId: string) {
                 post_id: post.id,
                 likes,
                 comments,
-                views
+                views,
+                fetched_at: new Date().toISOString()
               })
             
             if (insertErr) throw insertErr
@@ -533,15 +542,17 @@ export async function syncEmployeeEngagement(employeeId: string) {
           updatedCount++
         }
       } catch (postErr: any) {
-        console.error(`Error syncing stats for post ${post.id}:`, postErr.message)
+        console.error(`Error updating stats for post ${post.id}:`, postErr.message)
       }
     }
 
     revalidatePath('/admin/karyawan')
-    return { success: true, message: `Berhasil menyinkronkan data: ${updatedCount} dari ${posts.length} postingan berhasil diperbarui.` }
+    return { 
+      success: true, 
+      message: `Berhasil menyinkronkan data: ${updatedCount} dari ${posts.length} postingan berhasil diperbarui metrik terbarunya.` 
+    }
   } catch (error: any) {
     console.error('Error in syncEmployeeEngagement:', error.message)
     return { success: false, error: error.message }
   }
 }
-

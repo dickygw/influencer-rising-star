@@ -396,63 +396,96 @@ export default function LeaderboardClient({
         </div>
       )}
 
-      {/* Leaderboard Remaining List */}
-      <div className="table-wrapper animate-fade-in" style={{ animationDelay: '300ms' }}>
-        <table className="leaderboard-table">
-          <thead>
-            <tr>
-              <th className="rank-cell">No</th>
-              <th>{activeTab === 'individu' ? 'Nama Karyawan' : 'Nama Kantor Cabang'}</th>
-              {activeTab === 'individu' && <th>Cabang</th>}
-              <th>Peringkat Poin</th>
-            </tr>
-          </thead>
-          <tbody>
-            {list.length > 0 ? (
-              list.map((item, index) => {
-                const rank = index + 1
-                const isTopThree = rank <= 3
-                return (
-                  <tr key={item.id}>
-                    <td className="rank-cell" style={{ color: isTopThree ? 'var(--gold-400)' : 'var(--text-secondary)' }}>
-                      {rank}
-                    </td>
-                    <td>
-                      <div className="name-cell-wrapper">
-                        <div className="table-avatar">
-                          {activeTab === 'individu' ? getInitials(item.nama) : '🏢'}
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 600 }}>{item.nama}</div>
-                          {activeTab === 'individu' && (
-                            <div
-                              style={{
-                                fontSize: '0.6875rem',
-                                color: getBadgeInfo(item.totalPoints).color,
-                                fontWeight: 700,
-                                marginTop: '2px',
-                              }}
-                            >
-                              {getBadgeInfo(item.totalPoints).icon} {getBadgeInfo(item.totalPoints).label}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    {activeTab === 'individu' && <td>{item.cabang}</td>}
-                    <td className="points-cell">{item.totalPoints} Poin</td>
-                  </tr>
-                )
-              })
-            ) : (
+      {/* Leaderboard Remaining List - Shadcn UI */}
+      <div className="shadcn-card animate-fade-in" style={{ animationDelay: '250ms' }}>
+        <div className="shadcn-table-wrapper">
+          <table className="data-table">
+            <thead>
               <tr>
-                <td colSpan={activeTab === 'individu' ? 4 : 3} style={{ padding: 'var(--spacing-3xl)', textAlign: 'center', color: 'var(--text-muted)' }}>
-                  Papan peringkat masih kosong. Kumpulkan poin pertamamu sekarang!
-                </td>
+                <th style={{ width: '80px', textAlign: 'center' }}>Rank</th>
+                <th style={{ minWidth: '240px' }}>{activeTab === 'individu' ? 'Nama Karyawan' : 'Nama Kantor Cabang'}</th>
+                {activeTab === 'individu' && <th style={{ minWidth: '160px' }}>Kantor Cabang</th>}
+                <th style={{ minWidth: '140px', textAlign: 'center' }}>Total Poin</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {list.length > 0 ? (
+                list.map((item, index) => {
+                  const rank = index + 1
+                  let rankBadge = null
+                  if (rank === 1) rankBadge = <span style={{ fontSize: '1.25rem' }}>🥇</span>
+                  else if (rank === 2) rankBadge = <span style={{ fontSize: '1.25rem' }}>🥈</span>
+                  else if (rank === 3) rankBadge = <span style={{ fontSize: '1.25rem' }}>🥉</span>
+                  else {
+                    rankBadge = (
+                      <span style={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        width: '28px', 
+                        height: '28px', 
+                        borderRadius: '50%', 
+                        background: 'rgba(255,255,255,0.05)', 
+                        fontSize: '0.8125rem', 
+                        fontWeight: 600, 
+                        color: 'var(--text-muted)' 
+                      }}>
+                        {rank}
+                      </span>
+                    )
+                  }
+
+                  const initials = activeTab === 'individu' ? getInitials(item.nama) : '🏢'
+
+                  return (
+                    <tr key={item.id}>
+                      <td style={{ textAlign: 'center' }}>
+                        {rankBadge}
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div className="shadcn-avatar">
+                            {initials}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.9375rem' }}>
+                              {item.nama}
+                            </div>
+                            {activeTab === 'individu' && (
+                              <div style={{ marginTop: '3px' }}>
+                                <span className="shadcn-badge shadcn-badge-warning" style={{ fontSize: '0.6875rem' }}>
+                                  {getBadgeInfo(item.totalPoints).icon} {getBadgeInfo(item.totalPoints).label}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      {activeTab === 'individu' && (
+                        <td>
+                          <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+                            {item.cabang}
+                          </span>
+                        </td>
+                      )}
+                      <td style={{ textAlign: 'center' }}>
+                        <span className="metric-chip metric-chip--gold">
+                          ⭐ {item.totalPoints.toLocaleString('id-ID')} Poin
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })
+              ) : (
+                <tr>
+                  <td colSpan={activeTab === 'individu' ? 4 : 3} style={{ padding: '3.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                    Papan peringkat masih kosong. Kumpulkan poin pertamamu sekarang!
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )

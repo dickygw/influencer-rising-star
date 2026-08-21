@@ -267,33 +267,61 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Recent submissions list */}
-      <div className="dashboard-section animate-fade-in" style={{ animationDelay: '200ms' }}>
-        <h2 className="section-title">🕒 Aktivitas Pengiriman Terbaru</h2>
+      <div className="shadcn-card animate-fade-in" style={{ padding: '1.25rem', animationDelay: '200ms' }}>
+        <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1.25rem' }}>
+          🕒 Aktivitas Pengiriman Terbaru
+        </h2>
         
         {recentPosts.length > 0 ? (
-          <div>
-            {recentPosts.map((post: any) => (
-              <div key={post.id} className="activity-item">
-                <div className="activity-main">
-                  <div className="activity-avatar">
-                    {post.user?.nama.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
-                  </div>
-                  <div>
-                    <div className="activity-name">{post.user?.nama}</div>
-                    <div className="activity-details">
-                      Mengirim {post.content_type?.nama} pada {formatDate(post.submitted_at)}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {recentPosts.map((post: any) => {
+              const initials = post.user?.nama
+                ? post.user.nama
+                    .split(' ')
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map((n: string) => n[0])
+                    .join('')
+                    .toUpperCase()
+                : 'KY'
+
+              return (
+                <div 
+                  key={post.id} 
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '0.875rem 1rem',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    borderRadius: 'var(--radius-lg)',
+                    border: '1px solid var(--border-subtle)',
+                    transition: 'background 0.15s ease'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className="shadcn-avatar">
+                      {initials}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>
+                        {post.user?.nama}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                        Mengirim <strong>{post.content_type?.nama}</strong> • {formatDate(post.submitted_at)}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="activity-badge role-badge--karyawan">
-                  {post.platform}
+                  <div className={`shadcn-badge ${post.platform === 'instagram' ? 'shadcn-badge-purple' : post.platform === 'tiktok' ? 'shadcn-badge-secondary' : 'shadcn-badge-blue'}`} style={{ textTransform: 'capitalize' }}>
+                    {post.platform === 'instagram' ? '📸 Instagram' : post.platform === 'tiktok' ? '📱 TikTok' : post.platform}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         ) : (
-          <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 'var(--spacing-lg) 0', fontSize: '0.875rem' }}>
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem 0', fontSize: '0.875rem' }}>
             Belum ada aktivitas pengiriman postingan dari karyawan.
           </div>
         )}

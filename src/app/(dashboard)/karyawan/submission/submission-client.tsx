@@ -59,29 +59,31 @@ export default function SubmissionClient({
     ? [
         'Menghubungkan ke Instagram...',
         'Mengambil data postingan via Scraper...',
-        'Memvalidasi kepemilikan akun...',
-        'Memeriksa hashtag wajib #IRS2026...',
+        'Memvalidasi kepemilikan akun Instagram...',
+        'Google Gemini Vision memindai visual flyer & produk Pegadaian...',
         'Menghitung poin pencapaian...'
       ]
     : [
         'Membaca gambar bukti tangkapan layar...',
-        'Menyiapkan mesin OCR lokal (Tesseract)...',
-        'Mengekstrak teks dari gambar...',
+        'Menyiapkan mesin OCR & Google Gemini Vision...',
+        'Memindai visual & teks materi promosi Pegadaian...',
         'Mencocokkan handle akun media sosial...',
-        'Memeriksa keberadaan hashtag #IRS2026...'
+        'Memeriksa kelengkapan hashtag #IRS2026...'
       ]
 
   // Effect untuk menggerakkan (rotasi) teks progres loading setiap 1.8 detik saat proses kirim aktif
   useEffect(() => {
-    if (!isPending) {
-      setLoadingStep(0)
-      return
-    }
+    if (!isPending) return
+
     const interval = setInterval(() => {
       setLoadingStep(prev => (prev + 1) % loadingSteps.length)
     }, 1800)
-    return () => clearInterval(interval)
-  }, [isPending, verifyMethod])
+
+    return () => {
+      clearInterval(interval)
+      setLoadingStep(0)
+    }
+  }, [isPending, loadingSteps.length])
 
 
   const handlePlatformChange = (val: string) => {

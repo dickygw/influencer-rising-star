@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createKaryawan, updateKaryawan, type KaryawanData } from './actions'
+import { createKaryawan, updateKaryawan } from './actions'
 
 type KaryawanModalProps = {
   isOpen: boolean

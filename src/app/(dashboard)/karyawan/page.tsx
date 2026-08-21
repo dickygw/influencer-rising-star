@@ -249,10 +249,10 @@ export default function KaryawanDashboardPage() {
       {/* Hero Banner (PEA Style) */}
       <div className="pea-hero-banner animate-scale-in">
         <div className="pea-hero-content">
-          <span className="pea-hero-badge">Advocacy Journey 2026</span>
+          <span className="pea-hero-badge">IRS Journey 2026</span>
           <h2 className="pea-hero-title">Selamat Berjuang di Influencer Rising Star 2026!</h2>
           <p className="pea-hero-sub">
-            Bagikan konten promosi resmi Pegadaian di sosial media Anda, kumpulkan poin keaktifan, dan raih penghargaan bergengsi sebagai Duta Advocator terbaik tingkat nasional.
+            Bagikan konten promosi resmi Pegadaian di sosial media Anda, kumpulkan poin keaktifan, dan raih penghargaan bergengsi sebagai Influencer terbaik tingkat nasional.
           </p>
         </div>
         <div className="pea-hero-trophy">🏆</div>
@@ -317,7 +317,7 @@ export default function KaryawanDashboardPage() {
       {/* Advocacy guide checklist */}
       <div className="guide-section animate-fade-in" style={{ animationDelay: '200ms' }}>
         <h2 className="guide-title">📚 Cara Berpartisipasi & Dapatkan Poin</h2>
-        
+
         <div className="step-list">
           <div className="step-item">
             <div className="step-num">1</div>
