@@ -1,7 +1,7 @@
 <div align="center">
 
 # 🌟 Influencer Rising Star (IRS)
-### *Platform Employee Advocacy & Gamifikasi Media Sosial PT Pegadaian (Persero)*
+### *Platform Employee Influencer & Gamifikasi Media Sosial PT Pegadaian (Persero)*
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.3.1-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2.4-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
