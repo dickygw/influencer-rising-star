@@ -11,27 +11,71 @@ async function getKaryawanContext() {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('id')
+    .select('id, nip, nama')
     .eq('auth_uid', user.id)
     .single()
 
   if (!profile) throw new Error('User profile not found')
 
-  return { supabase, userId: profile.id }
+  return { supabase, userId: profile.id, nip: profile.nip, nama: profile.nama }
 }
 
-// Fetch linked social accounts for current user
+// Fetch linked social accounts & referral stats for current user
 export async function getSocialAccounts() {
   try {
     const { supabase, userId } = await getKaryawanContext()
-    const { data, error } = await supabase
+
+    // 1. Ambil akun sosial
+    const { data: accounts, error } = await supabase
       .from('social_accounts')
       .select('id, platform, handle, created_at')
       .eq('user_id', userId)
       .order('created_at', { ascending: true })
 
     if (error) throw error
-    return { success: true, data }
+
+    // 2. Ambil total klik dari link_clicks untuk user ini
+    let totalClicks = 0
+    try {
+      const { count } = await supabase
+        .from('link_clicks')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+
+      totalClicks = count || 0
+    } catch {
+      // Table might not exist yet
+    }
+
+    // 3. Ambil info kampanye aktif
+    let activeCampaign = {
+      campaignName: 'Promo Tabungan Emas Pegadaian',
+      destinationUrl: 'https://www.pegadaian.co.id/produk/tabungan-emas',
+    }
+
+    try {
+      const { data: camp } = await supabase
+        .from('campaign_settings')
+        .select('campaign_name, destination_url')
+        .eq('id', 'default')
+        .maybeSingle()
+
+      if (camp) {
+        activeCampaign = {
+          campaignName: camp.campaign_name || activeCampaign.campaignName,
+          destinationUrl: camp.destination_url || activeCampaign.destinationUrl,
+        }
+      }
+    } catch {
+      // Fallback
+    }
+
+    return {
+      success: true,
+      data: accounts || [],
+      totalClicks,
+      activeCampaign,
+    }
   } catch (error: any) {
     console.error('Error fetching social accounts:', error.message)
     return { success: false, error: error.message }
@@ -43,7 +87,7 @@ export async function linkSocialAccount(platform: string, handle: string) {
   try {
     const { supabase, userId } = await getKaryawanContext()
 
-    const sanitizedHandle = handle.trim().replace(/^@/, '') // Remove @ symbol if present
+    const sanitizedHandle = handle.trim().replace(/^@+/, '')
     if (!sanitizedHandle) {
       return { success: false, error: 'Username/handle tidak boleh kosong' }
     }
@@ -78,7 +122,7 @@ export async function unlinkSocialAccount(id: string) {
       .from('social_accounts')
       .delete()
       .eq('id', id)
-      .eq('user_id', userId) // Ensure ownership
+      .eq('user_id', userId)
 
     if (error) throw error
 

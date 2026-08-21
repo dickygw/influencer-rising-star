@@ -13,10 +13,16 @@ type SocialAccount = {
 
 export default function KaryawanSosmedPage() {
   const [accounts, setAccounts] = useState<SocialAccount[]>([])
+  const [totalClicks, setTotalClicks] = useState<number>(0)
+  const [activeCampaign, setActiveCampaign] = useState<{ campaignName: string; destinationUrl: string }>({
+    campaignName: 'Promo Tabungan Emas Pegadaian',
+    destinationUrl: 'https://www.pegadaian.co.id/produk/tabungan-emas',
+  })
   const [platform, setPlatform] = useState('instagram')
   const [handle, setHandle] = useState('')
   const [isPending, startTransition] = useTransition()
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [copiedLink, setCopiedLink] = useState(false)
   const [confirmData, setConfirmData] = useState<{
     isOpen: boolean
     type: 'success' | 'warning' | 'danger' | 'info'
@@ -36,6 +42,8 @@ export default function KaryawanSosmedPage() {
     const res = await getSocialAccounts()
     if (res.success && res.data) {
       setAccounts(res.data)
+      if (res.totalClicks !== undefined) setTotalClicks(res.totalClicks)
+      if (res.activeCampaign) setActiveCampaign(res.activeCampaign)
     }
   }
 
@@ -111,6 +119,13 @@ export default function KaryawanSosmedPage() {
     }
   }
 
+  // Cari akun Instagram utama
+  const igAccount = accounts.find((a) => a.platform.toLowerCase() === 'instagram')
+  const cleanIgHandle = igAccount ? igAccount.handle.replace(/^@+/, '').trim() : ''
+  const smartReferralUrl = cleanIgHandle
+    ? `${typeof window !== 'undefined' ? window.location.origin : 'https://irs.pegadaian.co.id'}/r/${cleanIgHandle}`
+    : ''
+
   return (
     <div className="sosmed-page animate-fade-in">
       <style jsx>{`
@@ -122,6 +137,7 @@ export default function KaryawanSosmedPage() {
           display: grid;
           grid-template-columns: 1fr 1.2fr;
           gap: var(--spacing-xl);
+          margin-bottom: var(--spacing-xl);
         }
 
         @media (max-width: 768px) {
@@ -210,9 +226,9 @@ export default function KaryawanSosmedPage() {
       `}</style>
 
       <div className="sosmed-header">
-        <h1 className="dashboard-greeting">Akun Sosial Media</h1>
+        <h1 className="dashboard-greeting">Akun Sosial Media & Smart Bio Link</h1>
         <p className="dashboard-date">
-          Tautkan akun sosial media pribadi Anda untuk mempermudah proses verifikasi postingan.
+          Tautkan akun sosial media Anda dan dapatkan tautan promosi unik untuk dipasang di Bio Instagram.
         </p>
       </div>
 
@@ -238,6 +254,162 @@ export default function KaryawanSosmedPage() {
         </div>
       )}
 
+      {/* ========================================================================= */}
+      {/* KARTU KHUSUS: SMART REFERRAL BIO LINK UNTUK KARYAWAN                      */}
+      {/* ========================================================================= */}
+      {igAccount ? (
+        <div
+          className="card animate-scale-in"
+          style={{
+            padding: '1.5rem',
+            background: 'linear-gradient(135deg, rgba(0, 107, 63, 0.15) 0%, rgba(217, 119, 6, 0.1) 100%)',
+            border: '1px solid var(--border-gold)',
+            borderRadius: 'var(--radius-xl)',
+            marginBottom: '1.75rem',
+            boxShadow: '0 0 20px rgba(0, 107, 63, 0.2)',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #f09433, #bc1888)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.5rem',
+                  boxShadow: '0 0 10px rgba(225, 48, 108, 0.4)',
+                }}
+              >
+                🔗
+              </div>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                  Tautan Promosi Bio Instagram Anda
+                </h2>
+                <p style={{ margin: '2px 0 0', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+                  Tempel tautan ini di Bio Instagram akun <strong>@{cleanIgHandle}</strong> untuk mengarahkan calon nasabah ke produk resmi Pegadaian.
+                </p>
+              </div>
+            </div>
+
+            {/* Total Klik Badge */}
+            <div
+              style={{
+                background: 'rgba(236, 72, 153, 0.15)',
+                border: '1px solid rgba(236, 72, 153, 0.3)',
+                padding: '0.5rem 1rem',
+                borderRadius: 'var(--radius-lg)',
+                textAlign: 'right',
+              }}
+            >
+              <div style={{ fontSize: '0.6875rem', color: '#f472b6', fontWeight: 700, textTransform: 'uppercase' }}>
+                Total Klik Calon Nasabah
+              </div>
+              <div style={{ fontSize: '1.375rem', fontWeight: 800, color: '#f472b6' }}>
+                🔗 {totalClicks.toLocaleString('id-ID')} <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>Klik</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Copy Link Input Box */}
+          <div
+            style={{
+              display: 'flex',
+              gap: '8px',
+              background: 'var(--bg-primary)',
+              padding: '0.5rem',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--border-default)',
+              marginBottom: '1rem',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+            }}
+          >
+            <input
+              type="text"
+              readOnly
+              value={smartReferralUrl}
+              style={{
+                flex: 1,
+                minWidth: '240px',
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--gold-primary)',
+                fontFamily: 'monospace',
+                fontSize: '0.9375rem',
+                fontWeight: 700,
+                padding: '0.5rem 0.75rem',
+                outline: 'none',
+              }}
+            />
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(smartReferralUrl)
+                setCopiedLink(true)
+                setTimeout(() => setCopiedLink(false), 2500)
+              }}
+              className="btn btn--primary"
+              style={{
+                background: copiedLink ? 'var(--green-light)' : 'linear-gradient(135deg, var(--green-primary), #006837)',
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: '0.8125rem',
+                padding: '0.625rem 1.25rem',
+              }}
+            >
+              {copiedLink ? '✅ Tautan Tersalin!' : '📋 Salin Tautan'}
+            </button>
+            <a
+              href={`/r/${cleanIgHandle}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn--secondary"
+              style={{ fontSize: '0.8125rem', padding: '0.625rem 1rem' }}
+            >
+              Uji Tautan ↗
+            </a>
+          </div>
+
+          {/* Destination & Tutorial Pill */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.75rem' }}>
+            <div style={{ background: 'rgba(0, 0, 0, 0.2)', padding: '0.75rem', borderRadius: 'var(--radius-md)', fontSize: '0.75rem' }}>
+              <span style={{ color: 'var(--text-muted)' }}>Saat ini diarahkan ke: </span>
+              <strong style={{ color: 'var(--gold-primary)' }}>{activeCampaign.campaignName}</strong>
+            </div>
+
+            <div style={{ background: 'rgba(0, 0, 0, 0.2)', padding: '0.75rem', borderRadius: 'var(--radius-md)', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+              💡 <strong>Cara Pasang di Bio:</strong> Buka Aplikasi Instagram &rarr; <strong>Edit Profil</strong> &rarr; <strong>Tautan / Links</strong> &rarr; Tambah Tautan Eksternal &rarr; Tempel Tautan Ini.
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div
+          className="card animate-fade-in"
+          style={{
+            padding: '1.25rem',
+            background: 'rgba(217, 119, 6, 0.08)',
+            border: '1px dashed var(--gold-primary)',
+            borderRadius: 'var(--radius-xl)',
+            marginBottom: '1.75rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+          }}
+        >
+          <span style={{ fontSize: '1.5rem' }}>ℹ️</span>
+          <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+            Tautkan akun <strong>Instagram</strong> Anda di bawah ini untuk mendapatkan <strong>Tautan Promosi Bio Unik</strong> dan melacak jumlah calon nasabah yang Anda arahkan ke Pegadaian!
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* FORM TAUTKAN AKUN & DAFTAR AKUN TERTAUT                                   */}
+      {/* ========================================================================= */}
       <div className="layout-grid">
         {/* Link new handle panel */}
         <div className="card-panel">

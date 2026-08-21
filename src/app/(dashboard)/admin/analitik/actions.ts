@@ -29,6 +29,67 @@ function extractInstagramShortcode(url: string): string | null {
   return match ? match[1] : null
 }
 
+export type AdvocatePost = {
+  id: string
+  postUrl: string
+  captionText: string
+  platform: string
+  submittedAt: string
+  likes: number
+  comments: number
+  views: number
+  contentTypeNama?: string
+}
+
+export type AdvocateData = {
+  id: string
+  nama: string
+  nip: string
+  cabangId: string
+  cabangNama: string
+  handle: string
+  followersCount: number
+  profilePicUrl?: string | null
+  bio?: string | null
+  totalPosts: number
+  totalLikes: number
+  totalViews: number
+  totalComments: number
+  engagementRate: number
+  erRating: 'High' | 'Good' | 'Growing'
+  isBioLinkActive: boolean
+  totalClicks: number
+  bioLinkUrl?: string | null
+  posts: AdvocatePost[]
+}
+
+export type TopPostData = {
+  id: string
+  postUrl: string
+  captionText: string
+  platform: string
+  submittedAt: string
+  employeeNama: string
+  employeeNip: string
+  cabangNama: string
+  handle: string
+  likes: number
+  comments: number
+  views: number
+}
+
+export type BranchData = {
+  id: string
+  nama: string
+  totalPosts: number
+  totalLikes: number
+  totalViews: number
+  advocateCount: number
+  totalEmployeesInBranch: number
+  participationRate: number
+  avgEngagement: number
+}
+
 export type AnalyticsOverview = {
   summary: {
     totalPosts: number
@@ -36,43 +97,22 @@ export type AnalyticsOverview = {
     totalViews: number
     totalComments: number
     totalAdvocates: number
+    totalEmployees: number
+    advocacyParticipationRate: number
+    totalPotentialReach: number
+    avgEngagementRate: number
     avgLikesPerPost: number
+    avgViewsPerPost: number
+    totalLinkClicks: number
+    bioLinkActiveAdvocates: number
+    bioLinkActiveRate: number
+    activeDestinationUrl: string
+    activeCampaignName: string
     lastSyncedAt: string | null
   }
-  advocates: Array<{
-    id: string
-    nama: string
-    nip: string
-    cabangId: string
-    cabangNama: string
-    handle: string
-    totalPosts: number
-    totalLikes: number
-    totalViews: number
-    totalComments: number
-  }>
-  topPosts: Array<{
-    id: string
-    postUrl: string
-    captionText: string
-    platform: string
-    submittedAt: string
-    employeeNama: string
-    employeeNip: string
-    cabangNama: string
-    handle: string
-    likes: number
-    comments: number
-    views: number
-  }>
-  branches: Array<{
-    id: string
-    nama: string
-    totalPosts: number
-    totalLikes: number
-    totalViews: number
-    advocateCount: number
-  }>
+  advocates: AdvocateData[]
+  topPosts: TopPostData[]
+  branches: BranchData[]
   cabangList: Array<{
     id: string
     nama: string
@@ -87,7 +127,26 @@ export async function getAnalyticsData(selectedCabangId?: string) {
   try {
     const { supabase, kanwilId } = await getAdminContext()
 
-    // 1. Ambil daftar cabang di Kanwil ini
+    // 1. Ambil Pengaturan Kampanye Aktif (Destination URL)
+    let activeDestinationUrl = 'https://www.pegadaian.co.id/produk/tabungan-emas'
+    let activeCampaignName = 'Promo Tabungan Emas Pegadaian'
+
+    try {
+      const { data: campData } = await supabase
+        .from('campaign_settings')
+        .select('campaign_name, destination_url')
+        .eq('id', 'default')
+        .maybeSingle()
+
+      if (campData) {
+        activeDestinationUrl = campData.destination_url || activeDestinationUrl
+        activeCampaignName = campData.campaign_name || activeCampaignName
+      }
+    } catch {
+      // Fallback if table not created yet
+    }
+
+    // 2. Ambil daftar cabang di Kanwil ini
     const { data: cabangRows, error: cabangErr } = await supabase
       .from('cabang')
       .select('id, nama')
@@ -96,7 +155,7 @@ export async function getAnalyticsData(selectedCabangId?: string) {
 
     if (cabangErr) throw cabangErr
 
-    // 2. Query karyawan beserta postingan approved dan statistiknya
+    // 3. Query seluruh karyawan di Kanwil ini beserta relasi sosial & postingannya
     let userQuery = supabase
       .from('users')
       .select(`
@@ -105,7 +164,7 @@ export async function getAnalyticsData(selectedCabangId?: string) {
         nama,
         cabang_id,
         cabang:cabang_id (id, nama),
-        social_accounts (platform, handle),
+        social_accounts (id, platform, handle),
         posts:posts!user_id (
           id,
           platform,
@@ -113,6 +172,7 @@ export async function getAnalyticsData(selectedCabangId?: string) {
           caption_text,
           submitted_at,
           status,
+          content_types:content_type_id (nama),
           post_engagement_stats (likes, comments, views, fetched_at)
         )
       `)
@@ -124,133 +184,249 @@ export async function getAnalyticsData(selectedCabangId?: string) {
     }
 
     const { data: usersData, error: usersErr } = await userQuery
-
     if (usersErr) throw usersErr
 
-    // 3. Kalkulasi data analitik
+    // 4. Query Total Klik Tautan dari link_clicks
+    const clicksMap = new Map<string, number>()
+    let totalLinkClicks = 0
+
+    try {
+      const { data: clicksData } = await supabase
+        .from('link_clicks')
+        .select('handle')
+
+      if (clicksData) {
+        clicksData.forEach((c: any) => {
+          const cleanH = (c.handle || '').toLowerCase().trim().replace(/^@+/, '')
+          if (cleanH) {
+            clicksMap.set(cleanH, (clicksMap.get(cleanH) || 0) + 1)
+          }
+        })
+      }
+    } catch {
+      // Fallback
+    }
+
+    // 5. Kalkulasi data analitik
     let totalPosts = 0
     let totalLikes = 0
     let totalViews = 0
     let totalComments = 0
+    let totalPotentialReach = 0
     let lastSyncedAt: string | null = null
 
-    const allApprovedPosts: any[] = []
-    const advocatesMap = new Map<string, any>()
-    const branchStatsMap = new Map<string, { id: string; nama: string; totalPosts: number; totalLikes: number; totalViews: number; advocateIds: Set<string> }>()
+    const allApprovedPosts: TopPostData[] = []
+    const advocatesMap = new Map<string, AdvocateData>()
+    const branchStatsMap = new Map<string, {
+      id: string;
+      nama: string;
+      totalPosts: number;
+      totalLikes: number;
+      totalViews: number;
+      totalComments: number;
+      advocateIds: Set<string>;
+      employeeCount: number;
+    }>()
 
-    // Inisialisasi map cabang
-    ;(cabangRows || []).forEach((c: any) => {
-      branchStatsMap.set(c.id.toString(), {
-        id: c.id.toString(),
-        nama: c.nama,
-        totalPosts: 0,
-        totalLikes: 0,
-        totalViews: 0,
-        advocateIds: new Set<string>()
-      })
-    })
-
-    ;(usersData || []).forEach((user: any) => {
-      const userCabangId = user.cabang_id ? user.cabang_id.toString() : 'unknown'
-      const userCabangNama = user.cabang?.nama || 'Kantor Wilayah'
-      const igAccount = (user.social_accounts || []).find((s: any) => s.platform === 'instagram')
-      const handle = igAccount?.handle || '-'
-
-      let userLikes = 0
-      let userViews = 0
-      let userComments = 0
-      let userApprovedPostsCount = 0
-
-      const approvedPosts = (user.posts || []).filter((p: any) => p.status === 'approved')
-
-      approvedPosts.forEach((post: any) => {
-        userApprovedPostsCount++
-        totalPosts++
-
-        const stats = post.post_engagement_stats || []
-        let pLikes = 0
-        let pComments = 0
-        let pViews = 0
-
-        stats.forEach((st: any) => {
-          pLikes += st.likes || 0
-          pComments += st.comments || 0
-          pViews += st.views || 0
-          if (st.fetched_at) {
-            if (!lastSyncedAt || new Date(st.fetched_at) > new Date(lastSyncedAt)) {
-              lastSyncedAt = st.fetched_at
-            }
-          }
-        })
-
-        userLikes += pLikes
-        userViews += pViews
-        userComments += pComments
-
-        totalLikes += pLikes
-        totalViews += pViews
-        totalComments += pComments
-
-        allApprovedPosts.push({
-          id: post.id.toString(),
-          postUrl: post.post_url,
-          captionText: post.caption_text || '',
-          platform: post.platform,
-          submittedAt: post.submitted_at,
-          employeeNama: user.nama,
-          employeeNip: user.nip,
-          cabangNama: userCabangNama,
-          handle,
-          likes: pLikes,
-          comments: pComments,
-          views: pViews
+      // Inisialisasi map cabang
+      ; (cabangRows || []).forEach((c: any) => {
+        branchStatsMap.set(c.id.toString(), {
+          id: c.id.toString(),
+          nama: c.nama,
+          totalPosts: 0,
+          totalLikes: 0,
+          totalViews: 0,
+          totalComments: 0,
+          advocateIds: new Set<string>(),
+          employeeCount: 0,
         })
       })
 
-      // Catat advokator jika pernah post
-      if (userApprovedPostsCount > 0) {
-        advocatesMap.set(user.id.toString(), {
-          id: user.id.toString(),
-          nama: user.nama,
-          nip: user.nip,
-          cabangId: userCabangId,
-          cabangNama: userCabangNama,
-          handle,
-          totalPosts: userApprovedPostsCount,
-          totalLikes: userLikes,
-          totalViews: userViews,
-          totalComments: userComments
-        })
+    const totalEmployees = usersData?.length || 0
 
+      ; (usersData || []).forEach((user: any) => {
+        const userCabangId = user.cabang_id ? user.cabang_id.toString() : 'unknown'
+        const userCabangNama = user.cabang?.nama || 'Kantor Wilayah'
+
+        // Update employee count in branch
         if (branchStatsMap.has(userCabangId)) {
-          const b = branchStatsMap.get(userCabangId)!
-          b.totalPosts += userApprovedPostsCount
-          b.totalLikes += userLikes
-          b.totalViews += userViews
-          b.advocateIds.add(user.id.toString())
+          branchStatsMap.get(userCabangId)!.employeeCount++
         }
-      }
-    })
 
-    // Sort Top Posts berdasarkan Likes terbanyak lalu Views
+        // Ambil akun Instagram
+        const igAccount = (user.social_accounts || []).find((s: any) => s.platform === 'instagram')
+        const handle = igAccount?.handle || '-'
+        const cleanH = handle.toLowerCase().trim().replace(/^@+/, '')
+
+        const followers = (igAccount as any)?.followers_count || 0
+        const profilePicUrl = (igAccount as any)?.profile_pic_url || null
+        const bio = (igAccount as any)?.bio || null
+        const isBioLinkActive = Boolean((igAccount as any)?.is_bio_link_active)
+        const bioLinkUrl = (igAccount as any)?.bio_link_url || null
+        const userClicks = cleanH && cleanH !== '-' ? clicksMap.get(cleanH) || 0 : 0
+        totalLinkClicks += userClicks
+
+        let userLikes = 0
+        let userViews = 0
+        let userComments = 0
+        let userApprovedPostsCount = 0
+        const userPostsList: AdvocatePost[] = []
+
+        const approvedPosts = (user.posts || []).filter((p: any) => p.status === 'approved')
+
+        approvedPosts.forEach((post: any) => {
+          userApprovedPostsCount++
+          totalPosts++
+
+          const stats = post.post_engagement_stats || []
+          let pLikes = 0
+          let pComments = 0
+          let pViews = 0
+
+          stats.forEach((st: any) => {
+            pLikes += st.likes || 0
+            pComments += st.comments || 0
+            pViews += st.views || 0
+            if (st.fetched_at) {
+              if (!lastSyncedAt || new Date(st.fetched_at) > new Date(lastSyncedAt)) {
+                lastSyncedAt = st.fetched_at
+              }
+            }
+          })
+
+          userLikes += pLikes
+          userViews += pViews
+          userComments += pComments
+
+          totalLikes += pLikes
+          totalViews += pViews
+          totalComments += pComments
+
+          const postRecord: TopPostData = {
+            id: post.id.toString(),
+            postUrl: post.post_url,
+            captionText: post.caption_text || '',
+            platform: post.platform,
+            submittedAt: post.submitted_at,
+            employeeNama: user.nama,
+            employeeNip: user.nip,
+            cabangNama: userCabangNama,
+            handle,
+            likes: pLikes,
+            comments: pComments,
+            views: pViews,
+          }
+
+          allApprovedPosts.push(postRecord)
+
+          userPostsList.push({
+            id: post.id.toString(),
+            postUrl: post.post_url,
+            captionText: post.caption_text || '',
+            platform: post.platform,
+            submittedAt: post.submitted_at,
+            likes: pLikes,
+            comments: pComments,
+            views: pViews,
+            contentTypeNama: post.content_types?.nama || 'Konten Promosi',
+          })
+        })
+
+        // Jika user pernah memposting konten approved, masukkan sebagai Advokator aktif
+        if (userApprovedPostsCount > 0) {
+          const effectiveReach = followers > 0 ? followers : Math.max(userLikes * 8, 150)
+          totalPotentialReach += effectiveReach
+
+          // Kalkulasi Engagement Rate (ER%): ((Likes + Comments) / Effective Reach) * 100
+          const rawER = effectiveReach > 0 ? ((userLikes + userComments) / effectiveReach) * 100 : 0
+          const engagementRate = Math.round(rawER * 10) / 10
+
+          let erRating: 'High' | 'Good' | 'Growing' = 'Growing'
+          if (engagementRate >= 5.0) {
+            erRating = 'High'
+          } else if (engagementRate >= 2.0) {
+            erRating = 'Good'
+          }
+
+          advocatesMap.set(user.id.toString(), {
+            id: user.id.toString(),
+            nama: user.nama,
+            nip: user.nip,
+            cabangId: userCabangId,
+            cabangNama: userCabangNama,
+            handle,
+            followersCount: effectiveReach,
+            profilePicUrl,
+            bio,
+            totalPosts: userApprovedPostsCount,
+            totalLikes: userLikes,
+            totalViews: userViews,
+            totalComments: userComments,
+            engagementRate,
+            erRating,
+            isBioLinkActive,
+            totalClicks: userClicks,
+            bioLinkUrl,
+            posts: userPostsList.sort((a, b) => (b.likes + b.views) - (a.likes + a.views)),
+          })
+
+          if (branchStatsMap.has(userCabangId)) {
+            const b = branchStatsMap.get(userCabangId)!
+            b.totalPosts += userApprovedPostsCount
+            b.totalLikes += userLikes
+            b.totalViews += userViews
+            b.totalComments += userComments
+            b.advocateIds.add(user.id.toString())
+          }
+        }
+      })
+
+    // Sort Top Posts berdasarkan total Engagement (Likes + Views + Comments)
     const topPosts = allApprovedPosts
-      .sort((a, b) => (b.likes + b.views) - (a.likes + a.views))
-      .slice(0, 12)
+      .sort((a, b) => (b.likes + b.views + b.comments) - (a.likes + a.views + a.comments))
+      .slice(0, 18)
 
     // Format data advokator
     const advocates = Array.from(advocatesMap.values())
 
+    // Hitung bio link active count
+    const bioLinkActiveAdvocates = advocates.filter((a) => a.isBioLinkActive).length
+    const bioLinkActiveRate = advocates.length > 0
+      ? Math.round((bioLinkActiveAdvocates / advocates.length) * 1000) / 10
+      : 0
+
     // Format data cabang
-    const branches = Array.from(branchStatsMap.values()).map(b => ({
-      id: b.id,
-      nama: b.nama,
-      totalPosts: b.totalPosts,
-      totalLikes: b.totalLikes,
-      totalViews: b.totalViews,
-      advocateCount: b.advocateIds.size
-    })).sort((a, b) => b.totalLikes - a.totalLikes)
+    const branches = Array.from(branchStatsMap.values()).map(b => {
+      const partRate = b.employeeCount > 0 ? Math.round((b.advocateIds.size / b.employeeCount) * 1000) / 10 : 0
+      const avgEng = b.totalPosts > 0 ? Math.round(((b.totalLikes + b.totalComments) / b.totalPosts) * 10) / 10 : 0
+      return {
+        id: b.id,
+        nama: b.nama,
+        totalPosts: b.totalPosts,
+        totalLikes: b.totalLikes,
+        totalViews: b.totalViews,
+        advocateCount: b.advocateIds.size,
+        totalEmployeesInBranch: b.employeeCount,
+        participationRate: partRate,
+        avgEngagement: avgEng,
+      }
+    }).sort((a, b) => b.totalLikes - a.totalLikes)
 
     const avgLikesPerPost = totalPosts > 0 ? Math.round((totalLikes / totalPosts) * 10) / 10 : 0
+    const avgViewsPerPost = totalPosts > 0 ? Math.round((totalViews / totalPosts) * 10) / 10 : 0
+
+    // Average Engagement Rate makro
+    const rawMacroER = totalPotentialReach > 0
+      ? ((totalLikes + totalComments) / totalPotentialReach) * 100
+      : totalPosts > 0
+        ? ((totalLikes + totalComments) / (totalPosts * 50)) * 100
+        : 0
+    const avgEngagementRate = Math.round(rawMacroER * 10) / 10
+
+    // Advocacy Participation Rate
+    const advocacyParticipationRate = totalEmployees > 0
+      ? Math.round((advocates.length / totalEmployees) * 1000) / 10
+      : 0
 
     return {
       success: true,
@@ -261,17 +437,155 @@ export async function getAnalyticsData(selectedCabangId?: string) {
           totalViews,
           totalComments,
           totalAdvocates: advocates.length,
+          totalEmployees,
+          advocacyParticipationRate,
+          totalPotentialReach,
+          avgEngagementRate,
           avgLikesPerPost,
-          lastSyncedAt
+          avgViewsPerPost,
+          totalLinkClicks,
+          bioLinkActiveAdvocates,
+          bioLinkActiveRate,
+          activeDestinationUrl,
+          activeCampaignName,
+          lastSyncedAt,
         },
         advocates,
         topPosts,
         branches,
-        cabangList: (cabangRows || []).map((c: any) => ({ id: c.id.toString(), nama: c.nama }))
-      } as AnalyticsOverview
+        cabangList: (cabangRows || []).map((c: any) => ({ id: c.id.toString(), nama: c.nama })),
+      } as AnalyticsOverview,
     }
   } catch (error: any) {
     console.error('Error in getAnalyticsData:', error.message)
+    return { success: false, error: error.message }
+  }
+}
+
+// =========================================================================
+// FUNGSI: updateCampaignDestinationUrl
+// Kegunaan: Mengubah URL tujuan pengalihan (Destination URL) kampanye secara dinamis
+// =========================================================================
+export async function updateCampaignDestinationUrl(destinationUrl: string, campaignName: string) {
+  try {
+    const { supabase, adminId } = await getAdminContext()
+
+    if (!destinationUrl || !destinationUrl.startsWith('http')) {
+      return { success: false, error: 'URL tujuan harus diawali dengan http:// atau https://' }
+    }
+
+    const { error } = await supabase
+      .from('campaign_settings')
+      .upsert({
+        id: 'default',
+        campaign_name: campaignName.trim() || 'Kampanye Utama IRS 2026',
+        destination_url: destinationUrl.trim(),
+        updated_at: new Date().toISOString(),
+        updated_by: adminId,
+      })
+
+    if (error) throw error
+
+    revalidatePath('/admin/analitik')
+    return { success: true, message: 'Tujuan Pengalihan (Destination URL) berhasil diperbarui!' }
+  } catch (error: any) {
+    console.error('Error in updateCampaignDestinationUrl:', error.message)
+    return { success: false, error: error.message }
+  }
+}
+
+// =========================================================================
+// FUNGSI: verifyKanwilBioLinks
+// Kegunaan: Memeriksa bio Instagram karyawan via Apify untuk mendeteksi link
+// =========================================================================
+export async function verifyKanwilBioLinks(selectedCabangId?: string) {
+  try {
+    const { supabase, kanwilId } = await getAdminContext()
+
+    const apifyToken = process.env.APIFY_TOKEN
+    if (!apifyToken) {
+      return { success: false, error: 'APIFY_TOKEN belum terkonfigurasi di server.' }
+    }
+
+    // Ambil semua akun Instagram karyawan di Kanwil
+    let query = supabase
+      .from('social_accounts')
+      .select(`
+        id,
+        handle,
+        user_id,
+        users!inner (id, kanwil_id, cabang_id, nip)
+      `)
+      .eq('platform', 'instagram')
+      .eq('users.kanwil_id', kanwilId)
+
+    if (selectedCabangId && selectedCabangId !== 'all') {
+      query = query.eq('users.cabang_id', selectedCabangId)
+    }
+
+    const { data: accounts, error: accErr } = await query
+    if (accErr) throw accErr
+
+    if (!accounts || accounts.length === 0) {
+      return { success: true, message: 'Tidak ada akun Instagram karyawan yang perlu diperiksa.' }
+    }
+
+    const { ApifyClient } = await import('apify-client')
+    const client = new ApifyClient({ token: apifyToken })
+
+    const handles = accounts.map((a: any) => a.handle.replace(/^@+/, '').trim()).filter(Boolean)
+
+    console.log(`Checking bio links for ${handles.length} accounts via Apify...`)
+
+    const run = await client.actor('apify/instagram-post-scraper').call({
+      username: handles,
+      resultsLimit: 1,
+    })
+
+    const { items } = await client.dataset(run.defaultDatasetId).listItems()
+    console.log(`Bio scraper returned ${items?.length || 0} items`)
+
+    let verifiedCount = 0
+
+    for (const acc of accounts) {
+      const cleanH = acc.handle.replace(/^@+/, '').toLowerCase().trim()
+      const item = (items || []).find((i: any) => (i.ownerUsername || '').toLowerCase() === cleanH)
+
+      if (item) {
+        const externalUrl = ((item as any).externalUrl || (item as any).external_url || '').toLowerCase()
+        const bio = ((item as any).biography || '').toLowerCase()
+
+        const hasBioLink =
+          externalUrl.includes(`/r/${cleanH}`) ||
+          externalUrl.includes('pegadaian') ||
+          externalUrl.includes('irs.') ||
+          bio.includes(`/r/${cleanH}`) ||
+          bio.includes('pegadaian')
+
+        try {
+          await supabase
+            .from('social_accounts')
+            .update({
+              is_bio_link_active: hasBioLink,
+              bio_link_url: (item as any).externalUrl || null,
+              bio_link_verified_at: new Date().toISOString(),
+            })
+            .eq('id', acc.id)
+
+          if (hasBioLink) verifiedCount++
+        } catch {
+          // Column might not exist yet if migration pending
+        }
+      }
+    }
+
+    revalidatePath('/admin/analitik')
+    return {
+      success: true,
+      message: `Pemeriksaan selesai! ${verifiedCount} dari ${accounts.length} akun terdeteksi telah memasang link di Bio Instagram.`,
+    }
+  } catch (error: any) {
+    console.error('Error in verifyKanwilBioLinks:', error.message)
     return { success: false, error: error.message }
   }
 }
@@ -300,7 +614,7 @@ export async function syncAllKanwilEngagement(selectedCabangId?: string) {
           id,
           kanwil_id,
           cabang_id,
-          social_accounts (platform, handle)
+          social_accounts (id, platform, handle)
         )
       `)
       .eq('platform', 'instagram')
@@ -312,8 +626,8 @@ export async function syncAllKanwilEngagement(selectedCabangId?: string) {
     }
 
     const { data: posts, error: postsErr } = await postQuery
-
     if (postsErr) throw postsErr
+
     if (!posts || posts.length === 0) {
       return { success: true, message: 'Tidak ada postingan Instagram terverifikasi yang perlu disinkronkan.' }
     }
@@ -321,9 +635,9 @@ export async function syncAllKanwilEngagement(selectedCabangId?: string) {
     const { ApifyClient } = await import('apify-client')
     const client = new ApifyClient({ token: apifyToken })
 
-    // Kumpulkan semua handle dan direct URLs
+    // Kumpulkan semua direct URLs
     const directUrls = Array.from(new Set(posts.map(p => p.post_url?.trim()).filter(Boolean)))
-    
+
     // Kumpulkan username akun yang terkait
     const handles = new Set<string>()
     posts.forEach((p: any) => {
@@ -334,13 +648,13 @@ export async function syncAllKanwilEngagement(selectedCabangId?: string) {
     })
     const usernameList = handles.size > 0 ? Array.from(handles) : ['instagram']
 
-    console.log(`Global sync for Kanwil ${kanwilId}: scraping ${directUrls.length} posts...`)
+    console.log(`Global sync for Kanwil ${kanwilId}: scraping ${directUrls.length} posts for handles:`, usernameList)
 
     // Panggil Apify actor dalam 1 batch
     const run = await client.actor('apify/instagram-post-scraper').call({
       username: usernameList,
       directUrls,
-      resultsLimit: Math.max(directUrls.length, 10)
+      resultsLimit: Math.max(directUrls.length * 2, 10),
     })
 
     const { items } = await client.dataset(run.defaultDatasetId).listItems()
@@ -380,7 +694,7 @@ export async function syncAllKanwilEngagement(selectedCabangId?: string) {
                 likes,
                 comments,
                 views,
-                fetched_at: new Date().toISOString()
+                fetched_at: new Date().toISOString(),
               })
               .eq('id', existingStat.id)
           } else {
@@ -391,7 +705,7 @@ export async function syncAllKanwilEngagement(selectedCabangId?: string) {
                 likes,
                 comments,
                 views,
-                fetched_at: new Date().toISOString()
+                fetched_at: new Date().toISOString(),
               })
           }
 
@@ -405,7 +719,7 @@ export async function syncAllKanwilEngagement(selectedCabangId?: string) {
     revalidatePath('/admin/analitik')
     return {
       success: true,
-      message: `Sinkronisasi selesai! ${updatedCount} dari ${posts.length} postingan berhasil diperbarui.`
+      message: `Sinkronisasi selesai! ${updatedCount} dari ${posts.length} postingan berhasil diperbarui metriknya.`,
     }
   } catch (error: any) {
     console.error('Error in syncAllKanwilEngagement:', error.message)
