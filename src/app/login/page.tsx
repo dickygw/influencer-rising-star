@@ -1,7 +1,34 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { login, type LoginState } from './actions'
+
+function SessionExpiredNotice() {
+  const searchParams = useSearchParams()
+  const reason = searchParams.get('reason')
+  const durasi = searchParams.get('durasi') || '5'
+
+  if (reason === 'session_expired') {
+    return (
+      <div className="login-error" style={{ backgroundColor: 'rgba(234, 179, 8, 0.15)', borderColor: '#eab308', color: '#fef08a' }}>
+        <span className="login-error-icon">ℹ</span>
+        <span>Sesi Anda telah berakhir karena akun Anda login di perangkat / laptop lain.</span>
+      </div>
+    )
+  }
+
+  if (reason === 'idle_timeout') {
+    return (
+      <div className="login-error" style={{ backgroundColor: 'rgba(59, 130, 246, 0.15)', borderColor: '#3b82f6', color: '#93c5fd' }}>
+        <span className="login-error-icon">⏱</span>
+        <span>Sesi otomatis keluar karena tidak ada aktivitas selama {durasi} menit demi keamanan akun Anda. Silakan login kembali.</span>
+      </div>
+    )
+  }
+
+  return null
+}
 
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState<LoginState, FormData>(
@@ -21,6 +48,11 @@ export default function LoginPage() {
           <h1 className="login-title">Influencer Rising Star</h1>
           <p className="login-subtitle">Employee Advocacy — Sosial Media</p>
         </div>
+
+        {/* Session Expired / Device Conflict notice */}
+        <Suspense fallback={null}>
+          <SessionExpiredNotice />
+        </Suspense>
 
         {/* Error message */}
         {state.error && (

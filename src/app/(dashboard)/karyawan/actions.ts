@@ -74,6 +74,6 @@ export async function getKaryawanDashboardSummary() {
     }
   } catch (error: any) {
     console.error('Error fetching employee dashboard summary:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }

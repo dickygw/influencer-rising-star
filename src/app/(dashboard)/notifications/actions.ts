@@ -36,7 +36,7 @@ export async function getUserNotifications() {
     return { success: true, data }
   } catch (error: any) {
     console.error('Error fetching notifications:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }
 
@@ -57,6 +57,6 @@ export async function markAllAsRead() {
     return { success: true }
   } catch (error: any) {
     console.error('Error marking notifications as read:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }

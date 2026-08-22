@@ -1,8 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
+
+// =========================================================================
+// SECURITY: Domain whitelist untuk mencegah Open Redirect Attack
+// Hanya domain resmi PT Pegadaian yang diizinkan sebagai target redirect.
+// =========================================================================
+const ALLOWED_REDIRECT_DOMAINS = [
+  'pegadaian.co.id',
+  'www.pegadaian.co.id',
+  'sahabatpegadaian.com',
+  'www.sahabatpegadaian.com',
+]
+
+function isAllowedRedirectUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    if (parsed.protocol !== 'https:') return false
+    return ALLOWED_REDIRECT_DOMAINS.some(
+      (d) => parsed.hostname === d || parsed.hostname.endsWith('.' + d)
+    )
+  } catch {
+    return false
+  }
+}
+
+// =========================================================================
+// SECURITY: Hash IP address untuk privasi (PDP/GDPR compliance)
+// IP di-hash satu arah agar tetap bisa deduplikasi tanpa menyimpan PII.
+// =========================================================================
+async function hashIpAddress(ip: string): Promise<string> {
+  try {
+    const encoder = new TextEncoder()
+    const data = encoder.encode(ip + '_irs2026_salt')
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+  } catch {
+    return 'hash_error'
+  }
+}
 
 export async function GET(
   request: NextRequest,
@@ -29,15 +66,17 @@ export async function GET(
         .eq('is_active', true)
         .maybeSingle()
 
-      if (campaign?.destination_url) {
+      // SECURITY: Validasi destination_url terhadap domain whitelist
+      if (campaign?.destination_url && isAllowedRedirectUrl(campaign.destination_url)) {
         targetUrl = campaign.destination_url
       }
 
       // 2. Cari pemilik handle di social_accounts
+      // SECURITY FIX: Gunakan .eq() exact match, BUKAN .ilike() wildcard
       const { data: socialAcc } = await supabase
         .from('social_accounts')
         .select('user_id, handle')
-        .ilike('handle', `%${cleanHandle}%`)
+        .eq('handle', cleanHandle)
         .maybeSingle()
 
       // 3. Catat klik ke tabel link_clicks
@@ -46,13 +85,16 @@ export async function GET(
       const rawIp = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anon'
       const ip = typeof rawIp === 'string' ? rawIp.split(',')[0].trim() : 'anon'
 
+      // SECURITY: Hash IP address sebelum disimpan (privasi)
+      const hashedIp = await hashIpAddress(ip)
+
       await supabase.from('link_clicks').insert({
         user_id: socialAcc?.user_id || null,
         handle: cleanHandle,
         destination_url: targetUrl,
         referrer,
         user_agent: userAgent,
-        ip_address: ip,
+        ip_address: hashedIp,
       })
     } catch (err: any) {
       console.error('Error logging click in /r/[handle]:', err.message)
@@ -74,3 +116,4 @@ export async function GET(
 
   return NextResponse.redirect(finalRedirectUrl, { status: 307 })
 }
+

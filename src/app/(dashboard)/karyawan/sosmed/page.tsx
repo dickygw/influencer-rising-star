@@ -412,53 +412,99 @@ export default function KaryawanSosmedPage() {
       {/* ========================================================================= */}
       <div className="layout-grid">
         {/* Link new handle panel */}
+        {/* Link new handle panel */}
         <div className="card-panel">
           <h2 className="placeholder-title" style={{ marginBottom: 'var(--spacing-lg)' }}>
             🔗 Tautkan Akun Baru
           </h2>
 
-          <form onSubmit={handleLink}>
-            <div className="form-group-custom">
-              <label className="form-label" htmlFor="sosmed-platform">Platform Sosial Media</label>
-              <div className="form-input-wrapper">
-                <select
-                  id="sosmed-platform"
-                  className="form-input"
-                  value={platform}
-                  onChange={(e) => setPlatform(e.target.value)}
-                  disabled={isPending}
-                  style={{ paddingLeft: '1rem', appearance: 'auto' }}
+          <div style={{ marginBottom: '1rem', fontSize: '0.8125rem', color: 'var(--text-secondary)', background: 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-default)' }}>
+            ℹ️ <strong>Ketentuan:</strong> Setiap karyawan diperbolehkan menautkan <strong>maksimal 1 akun</strong> untuk setiap media sosial (1 Instagram, 1 TikTok, 1 Facebook, 1 X).
+          </div>
+
+          {(() => {
+            const currentLinked = accounts.find((a) => a.platform.toLowerCase() === platform.toLowerCase())
+            const allLinked = ['instagram', 'tiktok', 'facebook', 'x'].every((p) =>
+              accounts.some((a) => a.platform.toLowerCase() === p)
+            )
+
+            if (allLinked) {
+              return (
+                <div style={{ padding: '1rem', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: 'var(--radius-lg)', color: '#86efac', textAlign: 'center', fontSize: '0.875rem' }}>
+                  🎉 <strong>Lengkap!</strong> Anda telah menautkan akun untuk semua platform media sosial (Instagram, TikTok, Facebook, dan X).
+                </div>
+              )
+            }
+
+            return (
+              <form onSubmit={handleLink}>
+                <div className="form-group-custom">
+                  <label className="form-label" htmlFor="sosmed-platform">Platform Sosial Media</label>
+                  <div className="form-input-wrapper">
+                    <select
+                      id="sosmed-platform"
+                      className="form-input"
+                      value={platform}
+                      onChange={(e) => setPlatform(e.target.value)}
+                      disabled={isPending}
+                      style={{ paddingLeft: '1rem', appearance: 'auto' }}
+                    >
+                      {[
+                        { id: 'instagram', label: 'Instagram' },
+                        { id: 'tiktok', label: 'TikTok' },
+                        { id: 'facebook', label: 'Facebook' },
+                        { id: 'x', label: 'X / Twitter' },
+                      ].map((item) => {
+                        const linked = accounts.find((a) => a.platform.toLowerCase() === item.id)
+                        return (
+                          <option
+                            key={item.id}
+                            value={item.id}
+                            style={{ background: 'var(--bg-secondary)' }}
+                          >
+                            {item.label} {linked ? `(Sudah Tertaut: @${linked.handle})` : ''}
+                          </option>
+                        )
+                      })}
+                    </select>
+                  </div>
+                </div>
+
+                {currentLinked ? (
+                  <div style={{ padding: '0.75rem', background: 'rgba(234, 179, 8, 0.1)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: 'var(--radius-md)', color: '#fde047', fontSize: '0.8125rem', marginBottom: '1rem' }}>
+                    ⚠️ Anda sudah menautkan akun {platform.toUpperCase()} (<strong>@{currentLinked.handle}</strong>). Untuk mengganti akun, hapus/putuskan tautan akun lama pada daftar di sebelah kanan terlebih dahulu.
+                  </div>
+                ) : (
+                  <div className="form-group-custom">
+                    <label className="form-label" htmlFor="sosmed-handle">Username / Handle</label>
+                    <div className="form-input-wrapper">
+                      <input
+                        id="sosmed-handle"
+                        type="text"
+                        className="form-input"
+                        placeholder="Contoh: dian.prasetya"
+                        value={handle}
+                        onChange={(e) => setHandle(e.target.value)}
+                        disabled={isPending}
+                        required
+                        style={{ paddingLeft: '1.75rem' }}
+                      />
+                      <span style={{ position: 'absolute', left: '1rem', color: 'var(--text-muted)', fontSize: '0.9375rem' }}>@</span>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  className="btn-link-submit"
+                  disabled={isPending || !!currentLinked}
+                  style={currentLinked ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                 >
-                  <option value="instagram" style={{ background: 'var(--bg-secondary)' }}>Instagram</option>
-                  <option value="tiktok" style={{ background: 'var(--bg-secondary)' }}>TikTok</option>
-                  <option value="facebook" style={{ background: 'var(--bg-secondary)' }}>Facebook</option>
-                  <option value="x" style={{ background: 'var(--bg-secondary)' }}>X / Twitter</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="form-group-custom">
-              <label className="form-label" htmlFor="sosmed-handle">Username / Handle</label>
-              <div className="form-input-wrapper">
-                <input
-                  id="sosmed-handle"
-                  type="text"
-                  className="form-input"
-                  placeholder="Contoh: dian.prasetya"
-                  value={handle}
-                  onChange={(e) => setHandle(e.target.value)}
-                  disabled={isPending}
-                  required
-                  style={{ paddingLeft: '1.75rem' }}
-                />
-                <span style={{ position: 'absolute', left: '1rem', color: 'var(--text-muted)', fontSize: '0.9375rem' }}>@</span>
-              </div>
-            </div>
-
-            <button type="submit" className="btn-link-submit" disabled={isPending}>
-              {isPending ? 'Menautkan...' : 'Tautkan Akun'}
-            </button>
-          </form>
+                  {isPending ? 'Menautkan...' : currentLinked ? 'Platform Sudah Tertaut' : 'Tautkan Akun'}
+                </button>
+              </form>
+            )
+          })()}
         </div>
 
         {/* Existing handles panel */}

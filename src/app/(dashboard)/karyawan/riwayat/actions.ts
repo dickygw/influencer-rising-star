@@ -66,7 +66,7 @@ export async function getRiwayatSubmissions() {
     return { success: true, data: formattedPosts }
   } catch (error: any) {
     console.error('Error fetching employee history:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }
 
@@ -87,6 +87,6 @@ export async function getPointsSummary() {
     return { success: true, totalBalance }
   } catch (error: any) {
     console.error('Error fetching points summary:', error.message)
-    return { success: false, error: error.message, totalBalance: 0 }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.', totalBalance: 0 }
   }
 }

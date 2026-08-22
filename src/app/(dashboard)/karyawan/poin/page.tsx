@@ -37,9 +37,9 @@ export default function KaryawanPoinPage() {
         .balance-giant-card {
           background: var(--gradient-gold);
           border: 1px solid var(--border-gold);
-          border-radius: var(--radius-xl);
+          border-radius: 16px;
           padding: var(--spacing-2xl);
-          box-shadow: var(--shadow-gold-lg);
+          box-shadow: var(--shadow-gold);
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -52,19 +52,19 @@ export default function KaryawanPoinPage() {
         .balance-val {
           font-size: 3.5rem;
           font-weight: 900;
-          color: var(--text-on-gold);
+          color: #0d1117;
           line-height: 1;
         }
 
         .balance-meta {
-          color: var(--text-on-gold);
+          color: #0d1117;
         }
 
         /* Timeline */
         .timeline-section {
-          background: var(--gradient-card);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-xl);
+          background: var(--bg-card);
+          border: 1px solid var(--border-default);
+          border-radius: 16px;
           padding: var(--spacing-2xl);
           box-shadow: var(--shadow-lg);
         }
@@ -102,9 +102,9 @@ export default function KaryawanPoinPage() {
         }
 
         .timeline-card {
-          background: var(--bg-secondary);
+          background: rgba(255, 255, 255, 0.03);
           border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-md);
+          border-radius: 14px;
           padding: var(--spacing-lg);
           display: flex;
           justify-content: space-between;

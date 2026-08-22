@@ -61,7 +61,7 @@ export async function getIndividuLeaderboard() {
     return { success: true, data: leaderboard }
   } catch (error: any) {
     console.error('Error fetching individual leaderboard:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }
 
@@ -108,6 +108,6 @@ export async function getCabangLeaderboard() {
     return { success: true, data: leaderboard }
   } catch (error: any) {
     console.error('Error fetching cabang leaderboard:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }

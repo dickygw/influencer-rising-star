@@ -90,7 +90,7 @@ export async function getContentTypes() {
     return { success: true, data }
   } catch (error: any) {
     console.error('Error fetching content types:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }
 
@@ -133,7 +133,7 @@ export async function getDailyQuota() {
     return { success: true, quotaRemaining, submittedToday }
   } catch (error: any) {
     console.error('Error checking quota:', error.message)
-    return { success: false, error: error.message, quotaRemaining: 0 }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.', quotaRemaining: 0 }
   }
 }
 
@@ -546,6 +546,43 @@ export async function submitPost(formData: FormData): Promise<SubmissionFormStat
       const quarter = Math.floor(now.getMonth() / 3) + 1
       const periodLabel = `${now.getFullYear()}-Q${quarter}`
 
+      // 7b. Simpan / Cache Gambar Postingan Instagram ke Storage
+      let savedScreenshotUrl: string | null = null
+      if (imageUrl) {
+        try {
+          if (imageUrl.startsWith('http')) {
+            const imgResp = await fetch(imageUrl)
+            if (imgResp.ok) {
+              const arrayBuf = await imgResp.arrayBuffer()
+              const imgBuffer = Buffer.from(arrayBuf)
+              const contentType = imgResp.headers.get('content-type') || 'image/jpeg'
+              const ext = contentType.includes('png') ? 'png' : 'jpg'
+              const storagePath = `${profile.id}/${Date.now()}_auto_${Math.random().toString(36).substring(2, 7)}.${ext}`
+
+              const { data: uploadData, error: uploadErr } = await supabase.storage
+                .from('screenshots')
+                .upload(storagePath, imgBuffer, {
+                  contentType,
+                  upsert: true,
+                })
+
+              if (!uploadErr && uploadData?.path) {
+                savedScreenshotUrl = uploadData.path
+              } else {
+                savedScreenshotUrl = imageUrl
+              }
+            } else {
+              savedScreenshotUrl = imageUrl
+            }
+          } else {
+            savedScreenshotUrl = imageUrl
+          }
+        } catch (downloadErr) {
+          console.warn('Auto cache image to storage failed, fallback to direct URL:', downloadErr)
+          savedScreenshotUrl = imageUrl
+        }
+      }
+
       // 8. SIMPAN DATA POSTINGAN DENGAN STATUS 'APPROVED'
       const { data: newPost, error: dbErr } = await supabase
         .from('posts')
@@ -555,7 +592,7 @@ export async function submitPost(formData: FormData): Promise<SubmissionFormStat
           content_type_id: parseInt(contentTypeId),
           platform: 'instagram',
           post_url: normalizedUrl,
-          screenshot_url: null,
+          screenshot_url: savedScreenshotUrl,
           caption_text: caption,
           hashtags: '#IRS2026',
           status: 'approved',

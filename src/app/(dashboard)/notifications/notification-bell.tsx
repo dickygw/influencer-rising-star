@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { getUserNotifications, markAllAsRead } from './actions'
-
 import { createClient } from '@/lib/supabase/client'
+import { IconBell } from '@/components/icons'
 
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState<any[]>([])
@@ -73,16 +73,15 @@ export default function NotificationBell() {
         }
 
         .bell-button {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          background: var(--bg-secondary);
+          width: 36px;
+          height: 36px;
+          border-radius: var(--radius-md);
+          background: rgba(255, 255, 255, 0.04);
           border: 1px solid var(--border-default);
           color: var(--text-secondary);
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.25rem;
           transition: all var(--transition-fast);
           position: relative;
         }
@@ -90,25 +89,25 @@ export default function NotificationBell() {
         .bell-button:hover {
           color: var(--text-primary);
           border-color: var(--green-light);
-          background: rgba(117, 192, 68, 0.03);
+          background: rgba(117, 192, 68, 0.1);
         }
 
         .badge {
           position: absolute;
-          top: -2px;
-          right: -2px;
-          background: var(--error);
+          top: -3px;
+          right: -3px;
+          background: #f85149;
           color: #fff;
-          font-size: 0.6875rem;
+          font-size: 0.625rem;
           font-weight: 700;
-          min-width: 18px;
-          height: 18px;
+          min-width: 16px;
+          height: 16px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 0 4px;
-          border: 2px solid var(--bg-primary);
+          padding: 0 3px;
+          border: 2px solid var(--bg-rail);
           animation: scaleIn 200ms ease-out;
         }
 
@@ -117,7 +116,7 @@ export default function NotificationBell() {
           right: 0;
           top: calc(100% + var(--spacing-sm));
           width: 320px;
-          background: var(--gradient-card);
+          background: var(--bg-drawer);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
           border: 1px solid var(--border-default);
@@ -166,15 +165,15 @@ export default function NotificationBell() {
         }
 
         .notification-item:hover {
-          background: rgba(255, 255, 255, 0.01);
+          background: rgba(255, 255, 255, 0.04);
         }
 
         .notification-item--unread {
-          background: rgba(117, 192, 68, 0.02);
+          background: rgba(13, 169, 77, 0.06);
         }
 
         .notification-icon {
-          font-size: 1.25rem;
+          font-size: 1.125rem;
           flex-shrink: 0;
         }
 
@@ -203,7 +202,7 @@ export default function NotificationBell() {
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Notifikasi"
       >
-        <span>🔔</span>
+        <IconBell size={18} />
         {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
       </button>
 

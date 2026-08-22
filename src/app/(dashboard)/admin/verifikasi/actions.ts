@@ -69,14 +69,14 @@ export async function getPendingSubmissions() {
     return { success: true, data: filteredPosts }
   } catch (error: any) {
     console.error('Error fetching pending submissions:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }
 
 // Approve a submission and award points
 export async function approveSubmission(postId: string) {
   try {
-    const { supabase, adminId } = await getAdminContext()
+    const { supabase, adminId, kanwilId } = await getAdminContext()
 
     // 1. Fetch post details
     const { data: post, error: fetchErr } = await supabase
@@ -87,6 +87,17 @@ export async function approveSubmission(postId: string) {
 
     if (fetchErr || !post) throw new Error('Postingan tidak ditemukan')
     if (post.status !== 'pending') throw new Error('Postingan sudah diproses')
+
+    // SECURITY: Validasi bahwa post milik kanwil yang sama dengan admin
+    const { data: postOwner } = await supabase
+      .from('users')
+      .select('kanwil_id')
+      .eq('id', post.user_id)
+      .single()
+
+    if (!postOwner || postOwner.kanwil_id !== kanwilId) {
+      throw new Error('Akses ditolak: Postingan bukan milik kanwil Anda')
+    }
 
     // 2. Fetch point rules matching content_type
     const { data: rules } = await supabase
@@ -152,14 +163,14 @@ export async function approveSubmission(postId: string) {
     return { success: true }
   } catch (error: any) {
     console.error('Approve error:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }
 
 // Reject a submission with reason
 export async function rejectSubmission(postId: string, rejectReason: string) {
   try {
-    const { supabase, adminId } = await getAdminContext()
+    const { supabase, adminId, kanwilId } = await getAdminContext()
 
     if (!rejectReason || rejectReason.trim() === '') {
       return { success: false, error: 'Alasan penolakan wajib diisi' }
@@ -174,6 +185,17 @@ export async function rejectSubmission(postId: string, rejectReason: string) {
 
     if (fetchErr || !post) throw new Error('Postingan tidak ditemukan')
     if (post.status !== 'pending') throw new Error('Postingan sudah diproses')
+
+    // SECURITY: Validasi bahwa post milik kanwil yang sama dengan admin
+    const { data: postOwner } = await supabase
+      .from('users')
+      .select('kanwil_id')
+      .eq('id', post.user_id)
+      .single()
+
+    if (!postOwner || postOwner.kanwil_id !== kanwilId) {
+      throw new Error('Akses ditolak: Postingan bukan milik kanwil Anda')
+    }
 
     // 2. Perform updates
     const { error: postUpdateErr } = await supabase
@@ -208,6 +230,6 @@ export async function rejectSubmission(postId: string, rejectReason: string) {
     return { success: true }
   } catch (error: any) {
     console.error('Reject error:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }

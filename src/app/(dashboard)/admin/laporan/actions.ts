@@ -64,7 +64,7 @@ export async function getKanwilStats() {
     }
   } catch (error: any) {
     console.error('Error fetching kanwil stats:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }
 
@@ -127,6 +127,6 @@ export async function getBranchPerformance() {
     return { success: true, data: performance }
   } catch (error: any) {
     console.error('Error fetching branch performance:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }

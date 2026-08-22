@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { DashboardShell } from './dashboard-shell'
  
-export const runtime = 'edge'
 
 export default async function DashboardLayout({
   children,

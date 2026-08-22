@@ -2,7 +2,6 @@ import { getKanwilStats, getBranchPerformance } from './actions'
 import LaporanClient from './laporan-client'
 
 export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
 
 export default async function AdminLaporanPage() {
   const [statsRes, branchRes] = await Promise.all([

@@ -2,7 +2,6 @@ import { getContentTypes, getDailyQuota } from './actions'
 import SubmissionClient from './submission-client'
 
 export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
 
 export default async function KaryawanSubmissionPage() {
   // Fetch initial data concurrently on server side

@@ -10,6 +10,19 @@ import {
   updateCampaignDestinationUrl,
   verifyKanwilBioLinks,
 } from './actions'
+import {
+  IconSettings,
+  IconSearch,
+  IconRefreshCw,
+  IconExternalLink,
+  IconTarget,
+  IconHeart,
+  IconEye,
+  IconMessageCircle,
+  IconUsers,
+  IconBarChart,
+  IconCheckCircle,
+} from '@/components/icons'
 
 type AnalitikClientProps = {
   initialData: AnalyticsOverview
@@ -26,6 +39,9 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
 
   // Modal State untuk Deep-Dive Karyawan
   const [selectedAdvocate, setSelectedAdvocate] = useState<AdvocateData | null>(null)
+
+  // Modal State untuk Lightbox Preview Foto
+  const [previewImage, setPreviewImage] = useState<{ url: string; title: string } | null>(null)
 
   // Modal / Panel State untuk Pengaturan Destination URL
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false)
@@ -169,16 +185,7 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
   const { summary } = data
 
   return (
-    <div className="dashboard-content">
-      {/* Breadcrumbs */}
-      <div className="pea-breadcrumbs animate-fade-in">
-        <span>IRS 2026</span>
-        <span>/</span>
-        <a href="/admin" onClick={(e) => { e.preventDefault(); router.push('/admin') }}>Admin</a>
-        <span>/</span>
-        <span>Data Analitik</span>
-      </div>
-
+    <div className="dashboard-content animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Header Banner */}
       <div
         style={{
@@ -187,13 +194,13 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
           alignItems: 'flex-start',
           flexWrap: 'wrap',
           gap: '1rem',
-          marginBottom: '1.5rem',
         }}
-        className="animate-fade-in"
       >
         <div>
-          <h1 className="dashboard-greeting" style={{ margin: 0 }}>📈 Data Analitik & Konversi Leads</h1>
-          <p style={{ marginTop: '4px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+          <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+            📈 Data Analitik & Konversi Leads
+          </h1>
+          <p style={{ marginTop: '6px', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
             Pantau interaksi media sosial (Likes, Views), status link di Bio Instagram, dan total klik calon nasabah per karyawan.
           </p>
         </div>
@@ -203,94 +210,81 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
           <button
             onClick={() => setShowSettingsModal(true)}
             className="btn btn--secondary"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '0.625rem 1rem',
-              fontWeight: 600,
-              fontSize: '0.8125rem',
-            }}
           >
-            ⚙️ Atur Destination URL
+            <IconSettings size={16} />
+            <span>Atur Destination URL</span>
           </button>
 
           <button
             onClick={handleVerifyBioLinks}
             disabled={isCheckingBio || isPending}
             className="btn btn--secondary"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '0.625rem 1rem',
-              fontWeight: 600,
-              fontSize: '0.8125rem',
-            }}
           >
-            🔍 {isCheckingBio ? 'Memeriksa Bio IG...' : 'Cek Link Bio'}
+            <IconSearch size={16} />
+            <span>{isCheckingBio ? 'Memeriksa Bio IG...' : 'Cek Link Bio'}</span>
           </button>
 
           <button
             onClick={handleGlobalSync}
             disabled={isSyncing || isPending}
             className="btn btn--primary"
-            style={{
-              background: isSyncing
-                ? 'var(--bg-tertiary)'
-                : 'linear-gradient(135deg, var(--green-primary) 0%, #006837 100%)',
-              border: '1px solid var(--border-gold)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '0.625rem 1.25rem',
-              fontWeight: 600,
-              boxShadow: 'var(--shadow-md)',
-            }}
           >
             <span
               style={{
-                display: 'inline-block',
-                transform: isSyncing ? 'rotate(360deg)' : 'none',
-                transition: isSyncing ? 'transform 1s linear infinite' : 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                animation: isSyncing ? 'spin 1s linear infinite' : 'none',
               }}
             >
-              🔄
+              <IconRefreshCw size={16} />
             </span>
-            {isSyncing ? 'Menyinkronkan...' : 'Sync Seluruh Engagement'}
+            <span>{isSyncing ? 'Menyinkronkan...' : 'Sync Seluruh Engagement'}</span>
           </button>
         </div>
       </div>
 
       {/* Active Campaign Info Pill */}
       <div
-        className="card animate-fade-in"
+        className="card"
         style={{
-          padding: '0.75rem 1.25rem',
-          marginBottom: '1.25rem',
-          background: 'rgba(0, 107, 63, 0.08)',
-          border: '1px solid rgba(117, 192, 68, 0.25)',
-          borderRadius: 'var(--radius-lg)',
+          padding: '1rem 1.5rem',
+          background: 'rgba(13, 169, 77, 0.08)',
+          border: '1px solid rgba(13, 169, 77, 0.3)',
+          borderRadius: '16px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '0.75rem',
+          gap: '1rem',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '1.25rem' }}>🎯</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              background: 'rgba(13, 169, 77, 0.2)',
+              color: 'var(--green-light)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <IconTarget size={20} />
+          </div>
           <div>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>
+            <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
               Tujuan Pengalihan Tautan Aktif (Destination URL):
             </span>
-            <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--gold-primary)' }}>
+            <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--gold-400)', marginTop: '2px' }}>
               {summary.activeCampaignName || 'Promo Tabungan Emas'} ➔{' '}
               <a
                 href={summary.activeDestinationUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: 'var(--text-primary)', textDecoration: 'underline', fontWeight: 500 }}
+                style={{ color: '#ffffff', textDecoration: 'underline', fontWeight: 500 }}
               >
                 {summary.activeDestinationUrl}
               </a>
@@ -300,33 +294,24 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
 
         <button
           onClick={() => setShowSettingsModal(true)}
-          style={{
-            background: 'none',
-            border: '1px solid var(--border-gold)',
-            color: 'var(--gold-primary)',
-            padding: '4px 10px',
-            borderRadius: '6px',
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
+          className="btn btn--secondary"
+          style={{ padding: '0.35rem 0.85rem', fontSize: '0.75rem' }}
         >
-          Ubah URL Tujuan ↗
+          <span>Ubah URL Tujuan</span>
+          <IconExternalLink size={14} />
         </button>
       </div>
 
       {/* Sync Alert Banner */}
       {syncMessage && (
         <div
-          className="animate-fade-in"
           style={{
-            padding: '0.75rem 1rem',
-            borderRadius: 'var(--radius-md)',
-            marginBottom: '1.25rem',
+            padding: '0.875rem 1.25rem',
+            borderRadius: '12px',
             background:
-              syncMessage.type === 'success' ? 'rgba(0, 186, 136, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+              syncMessage.type === 'success' ? 'rgba(13, 169, 77, 0.15)' : 'rgba(239, 68, 68, 0.15)',
             border: `1px solid ${syncMessage.type === 'success' ? 'var(--green-light)' : '#ef4444'}`,
-            color: syncMessage.type === 'success' ? 'var(--green-light)' : '#fca5a5',
+            color: syncMessage.type === 'success' ? '#ffffff' : '#fca5a5',
             fontSize: '0.875rem',
             display: 'flex',
             justifyContent: 'space-between',
@@ -345,16 +330,15 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
 
       {/* Filter Cabang & Search Controls */}
       <div
-        className="card animate-fade-in"
+        className="card"
         style={{
-          padding: '1rem 1.25rem',
-          marginBottom: '1.5rem',
+          padding: '1rem 1.5rem',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: '1rem',
-          background: 'var(--gradient-card)',
+          borderRadius: '16px',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
@@ -367,13 +351,13 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
             disabled={isPending}
             style={{
               padding: '0.5rem 1rem',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--bg-secondary)',
+              borderRadius: '10px',
+              background: '#0d1117',
               border: '1px solid var(--border-default)',
               color: 'var(--text-primary)',
               fontSize: '0.875rem',
               cursor: 'pointer',
-              minWidth: '200px',
+              minWidth: '220px',
             }}
           >
             <option value="all">Semua Cabang di Wilayah</option>
@@ -383,10 +367,10 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
               </option>
             ))}
           </select>
-          {isPending && <span style={{ fontSize: '0.8125rem', color: 'var(--gold-primary)' }}>Memuat data...</span>}
+          {isPending && <span style={{ fontSize: '0.8125rem', color: 'var(--gold-400)' }}>Memuat data...</span>}
         </div>
 
-        <div style={{ minWidth: '240px' }}>
+        <div style={{ minWidth: '260px' }}>
           <input
             type="text"
             placeholder="🔍 Cari nama, NIP, handle IG..."
@@ -395,8 +379,8 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
             style={{
               width: '100%',
               padding: '0.5rem 1rem',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--bg-secondary)',
+              borderRadius: '10px',
+              background: '#0d1117',
               border: '1px solid var(--border-default)',
               color: 'var(--text-primary)',
               fontSize: '0.875rem',
@@ -406,42 +390,56 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
       </div>
 
       {/* ========================================================================= */}
-      {/* 5 EXECUTIVE SUMMARY KPI CARDS                                             */}
+      {/* 5 EXECUTIVE SUMMARY KPI CARDS (SMOOTH 16px ROUNDED)                       */}
       {/* ========================================================================= */}
       <div
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
           gap: '1.25rem',
-          marginBottom: '1.75rem',
         }}
-        className="animate-fade-in"
       >
         {/* KPI 1: Potential Reach */}
         <div
           className="card stat-card"
           style={{
-            padding: '1.25rem',
-            borderLeft: '4px solid #3b82f6',
-            background: 'var(--gradient-card)',
+            padding: '1.25rem 1.5rem',
+            borderRadius: '16px',
+            borderTop: '3px solid #3b82f6',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Potential Reach
               </div>
-              <div style={{ fontSize: '1.625rem', fontWeight: 800, color: 'var(--text-primary)', margin: '6px 0 2px' }}>
+              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#ffffff', margin: '6px 0 2px' }}>
                 {summary.totalPotentialReach.toLocaleString('id-ID')}
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                 Estimasi audiens terpapar
               </div>
             </div>
-            <div style={{ fontSize: '1.75rem', opacity: 0.8 }}>👥</div>
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: 'rgba(59, 130, 246, 0.15)',
+                color: '#60a5fa',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <IconUsers size={20} />
+            </div>
           </div>
-          <div style={{ marginTop: '10px' }}>
-            <span style={{ fontSize: '0.6875rem', background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+          <div style={{ marginTop: '12px' }}>
+            <span style={{ fontSize: '0.6875rem', background: 'rgba(59, 130, 246, 0.15)', color: '#93c5fd', padding: '3px 10px', borderRadius: '20px', fontWeight: 700 }}>
               Jangkauan Organik
             </span>
           </div>
@@ -451,34 +449,50 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
         <div
           className="card stat-card"
           style={{
-            padding: '1.25rem',
-            borderLeft: '4px solid var(--gold-primary)',
-            background: 'var(--gradient-card)',
+            padding: '1.25rem 1.5rem',
+            borderRadius: '16px',
+            borderTop: '3px solid var(--gold-400)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Avg. Engagement Rate
               </div>
-              <div style={{ fontSize: '1.625rem', fontWeight: 800, color: 'var(--gold-primary)', margin: '6px 0 2px' }}>
+              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--gold-400)', margin: '6px 0 2px' }}>
                 {summary.avgEngagementRate}%
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                 {summary.totalLikes.toLocaleString('id-ID')} Likes · {summary.totalComments.toLocaleString('id-ID')} Komentar
               </div>
             </div>
-            <div style={{ fontSize: '1.75rem', opacity: 0.8 }}>⚡</div>
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: 'rgba(251, 197, 19, 0.15)',
+                color: 'var(--gold-400)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <IconHeart size={20} />
+            </div>
           </div>
-          <div style={{ marginTop: '10px' }}>
+          <div style={{ marginTop: '12px' }}>
             <span
               style={{
                 fontSize: '0.6875rem',
-                background: summary.avgEngagementRate >= 5 ? 'rgba(0, 186, 136, 0.15)' : 'rgba(217, 119, 6, 0.15)',
-                color: summary.avgEngagementRate >= 5 ? 'var(--green-light)' : 'var(--gold-primary)',
-                padding: '2px 8px',
-                borderRadius: '12px',
-                fontWeight: 600,
+                background: summary.avgEngagementRate >= 5 ? 'rgba(13, 169, 77, 0.2)' : 'rgba(251, 197, 19, 0.2)',
+                color: summary.avgEngagementRate >= 5 ? 'var(--green-light)' : 'var(--gold-400)',
+                padding: '3px 10px',
+                borderRadius: '20px',
+                fontWeight: 700,
               }}
             >
               {summary.avgEngagementRate >= 5 ? '🔥 Sangat Aktif' : summary.avgEngagementRate >= 2 ? '✨ Optimal' : '🌱 Berkembang'}
@@ -490,27 +504,43 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
         <div
           className="card stat-card"
           style={{
-            padding: '1.25rem',
-            borderLeft: '4px solid #ec4899',
-            background: 'var(--gradient-card)',
+            padding: '1.25rem 1.5rem',
+            borderRadius: '16px',
+            borderTop: '3px solid #ec4899',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Klik Tautan Nasabah
               </div>
-              <div style={{ fontSize: '1.625rem', fontWeight: 800, color: '#f472b6', margin: '6px 0 2px' }}>
-                {summary.totalLinkClicks.toLocaleString('id-ID')} <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>Klik</span>
+              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#f472b6', margin: '6px 0 2px' }}>
+                {summary.totalLinkClicks.toLocaleString('id-ID')} <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Klik</span>
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                 {summary.bioLinkActiveAdvocates} dari {summary.totalAdvocates} pasang di Bio IG
               </div>
             </div>
-            <div style={{ fontSize: '1.75rem', opacity: 0.8 }}>🔗</div>
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: 'rgba(236, 72, 153, 0.15)',
+                color: '#f472b6',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <IconExternalLink size={20} />
+            </div>
           </div>
-          <div style={{ marginTop: '10px' }}>
-            <span style={{ fontSize: '0.6875rem', background: 'rgba(236, 72, 153, 0.15)', color: '#f472b6', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+          <div style={{ marginTop: '12px' }}>
+            <span style={{ fontSize: '0.6875rem', background: 'rgba(236, 72, 153, 0.15)', color: '#f472b6', padding: '3px 10px', borderRadius: '20px', fontWeight: 700 }}>
               {summary.bioLinkActiveRate}% Kepatuhan Bio
             </span>
           </div>
@@ -520,27 +550,43 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
         <div
           className="card stat-card"
           style={{
-            padding: '1.25rem',
-            borderLeft: '4px solid var(--green-light)',
-            background: 'var(--gradient-card)',
+            padding: '1.25rem 1.5rem',
+            borderRadius: '16px',
+            borderTop: '3px solid var(--green-light)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Total Views
               </div>
-              <div style={{ fontSize: '1.625rem', fontWeight: 800, color: 'var(--text-primary)', margin: '6px 0 2px' }}>
+              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#ffffff', margin: '6px 0 2px' }}>
                 {summary.totalViews.toLocaleString('id-ID')}
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                 Dari {summary.totalPosts} postingan
               </div>
             </div>
-            <div style={{ fontSize: '1.75rem', opacity: 0.8 }}>🎬</div>
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: 'rgba(13, 169, 77, 0.15)',
+                color: 'var(--green-light)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <IconEye size={20} />
+            </div>
           </div>
-          <div style={{ marginTop: '10px' }}>
-            <span style={{ fontSize: '0.6875rem', background: 'rgba(0, 186, 136, 0.15)', color: 'var(--green-light)', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+          <div style={{ marginTop: '12px' }}>
+            <span style={{ fontSize: '0.6875rem', background: 'rgba(13, 169, 77, 0.15)', color: 'var(--green-light)', padding: '3px 10px', borderRadius: '20px', fontWeight: 700 }}>
               Avg. {summary.avgViewsPerPost} views/post
             </span>
           </div>
@@ -550,26 +596,42 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
         <div
           className="card stat-card"
           style={{
-            padding: '1.25rem',
-            borderLeft: '4px solid #8b5cf6',
-            background: 'var(--gradient-card)',
+            padding: '1.25rem 1.5rem',
+            borderRadius: '16px',
+            borderTop: '3px solid #8b5cf6',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Advocacy Rate
               </div>
-              <div style={{ fontSize: '1.625rem', fontWeight: 800, color: '#a78bfa', margin: '6px 0 2px' }}>
+              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#c084fc', margin: '6px 0 2px' }}>
                 {summary.advocacyParticipationRate}%
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                 {summary.totalAdvocates}/{summary.totalEmployees} karyawan aktif
               </div>
             </div>
-            <div style={{ fontSize: '1.75rem', opacity: 0.8 }}>🎯</div>
+            <div
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: 'rgba(139, 92, 246, 0.15)',
+                color: '#a78bfa',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <IconTarget size={20} />
+            </div>
           </div>
-          <div style={{ marginTop: '10px', width: '100%', height: '6px', background: 'var(--bg-tertiary)', borderRadius: '3px', overflow: 'hidden' }}>
+          <div style={{ marginTop: '12px', width: '100%', height: '6px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '3px', overflow: 'hidden' }}>
             <div
               style={{
                 width: `${Math.min(summary.advocacyParticipationRate, 100)}%`,
@@ -590,100 +652,54 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
           display: 'flex',
           gap: '0.5rem',
           borderBottom: '1px solid var(--border-default)',
-          marginBottom: '1.5rem',
         }}
-        className="animate-fade-in"
       >
         <button
           onClick={() => setActiveTab('advocates')}
           style={{
             padding: '0.75rem 1.25rem',
-            background: 'none',
-            border: 'none',
-            borderBottom: activeTab === 'advocates' ? '3px solid var(--gold-primary)' : '3px solid transparent',
-            color: activeTab === 'advocates' ? 'var(--text-primary)' : 'var(--text-muted)',
+            borderBottom: activeTab === 'advocates' ? '3px solid var(--green-light)' : '3px solid transparent',
+            color: activeTab === 'advocates' ? '#ffffff' : 'var(--text-secondary)',
             fontWeight: activeTab === 'advocates' ? 700 : 500,
-            fontSize: '0.9375rem',
+            fontSize: '0.875rem',
             cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
+            transition: 'all 0.15s ease',
           }}
         >
-          <span>🌟 Performa Influencer & Bio Link</span>
-          <span
-            style={{
-              fontSize: '0.75rem',
-              background: activeTab === 'advocates' ? 'rgba(217, 119, 6, 0.2)' : 'var(--bg-secondary)',
-              color: activeTab === 'advocates' ? 'var(--gold-primary)' : 'var(--text-muted)',
-              padding: '2px 8px',
-              borderRadius: '10px',
-            }}
-          >
-            {filteredAdvocates.length}
-          </span>
+          👥 Kinerja Advokator ({filteredAdvocates.length})
         </button>
 
         <button
           onClick={() => setActiveTab('posts')}
           style={{
             padding: '0.75rem 1.25rem',
-            background: 'none',
-            border: 'none',
             borderBottom: activeTab === 'posts' ? '3px solid var(--green-light)' : '3px solid transparent',
-            color: activeTab === 'posts' ? 'var(--text-primary)' : 'var(--text-muted)',
+            color: activeTab === 'posts' ? '#ffffff' : 'var(--text-secondary)',
             fontWeight: activeTab === 'posts' ? 700 : 500,
-            fontSize: '0.9375rem',
+            fontSize: '0.875rem',
             cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
+            transition: 'all 0.15s ease',
           }}
         >
-          <span>🖼️ Galeri Postingan Terbaik</span>
-          <span
-            style={{
-              fontSize: '0.75rem',
-              background: activeTab === 'posts' ? 'rgba(0, 186, 136, 0.2)' : 'var(--bg-secondary)',
-              color: activeTab === 'posts' ? 'var(--green-light)' : 'var(--text-muted)',
-              padding: '2px 8px',
-              borderRadius: '10px',
-            }}
-          >
-            {data.topPosts.length}
-          </span>
+          🔥 Top Postingan ({sortedTopPosts.length})
         </button>
 
         <button
           onClick={() => setActiveTab('branches')}
           style={{
             padding: '0.75rem 1.25rem',
-            background: 'none',
-            border: 'none',
-            borderBottom: activeTab === 'branches' ? '3px solid #3b82f6' : '3px solid transparent',
-            color: activeTab === 'branches' ? 'var(--text-primary)' : 'var(--text-muted)',
+            borderBottom: activeTab === 'branches' ? '3px solid var(--green-light)' : '3px solid transparent',
+            color: activeTab === 'branches' ? '#ffffff' : 'var(--text-secondary)',
             fontWeight: activeTab === 'branches' ? 700 : 500,
-            fontSize: '0.9375rem',
+            fontSize: '0.875rem',
             cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
+            transition: 'all 0.15s ease',
           }}
         >
-          <span>🏢 Komparasi Kinerja Cabang</span>
-          <span
-            style={{
-              fontSize: '0.75rem',
-              background: activeTab === 'branches' ? 'rgba(59, 130, 246, 0.2)' : 'var(--bg-secondary)',
-              color: activeTab === 'branches' ? '#60a5fa' : 'var(--text-muted)',
-              padding: '2px 8px',
-              borderRadius: '10px',
-            }}
-          >
-            {data.branches.length}
-          </span>
+          🏢 Kinerja Per Cabang ({data.branches.length})
         </button>
       </div>
+
 
       {/* ========================================================================= */}
       {/* TAB 1: TABEL ADVOKATOR, BIO LINK STATUS & MODAL DEEP-DIVE                 */}
@@ -969,12 +985,13 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    borderRadius: 'var(--radius-lg)',
-                    border: idx === 0 ? '1px solid var(--gold-primary)' : '1px solid var(--border-default)',
-                    boxShadow: idx === 0 ? '0 0 15px rgba(217, 119, 6, 0.15)' : 'var(--shadow-md)',
+                    borderRadius: '16px',
+                    border: idx === 0 ? '1px solid var(--gold-400)' : '1px solid var(--border-default)',
+                    boxShadow: idx === 0 ? '0 0 18px rgba(251, 197, 19, 0.2)' : '0 4px 16px rgba(0, 0, 0, 0.25)',
                   }}
                 >
                   <div>
+                    {/* Top Author & Platform Info */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div
@@ -982,19 +999,19 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
                             width: '36px',
                             height: '36px',
                             borderRadius: '50%',
-                            background: 'linear-gradient(135deg, var(--green-primary), var(--gold-primary))',
+                            background: 'linear-gradient(135deg, var(--green-primary), var(--gold-400))',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             fontWeight: 700,
-                            color: '#fff',
+                            color: '#0d1117',
                             fontSize: '0.875rem',
                           }}
                         >
                           {p.employeeNama.charAt(0)}
                         </div>
                         <div>
-                          <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>
+                          <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-primary)' }}>
                             {p.employeeNama}
                           </div>
                           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -1006,15 +1023,86 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
                       <span
                         style={{
                           fontSize: '0.6875rem',
-                          padding: '2px 8px',
-                          borderRadius: '10px',
+                          padding: '3px 8px',
+                          borderRadius: '20px',
                           background: 'rgba(225, 48, 108, 0.15)',
                           color: '#f43f5e',
                           fontWeight: 700,
+                          border: '1px solid rgba(225, 48, 108, 0.3)',
                         }}
                       >
                         📸 Instagram
                       </span>
+                    </div>
+
+                    {/* Medium Image Preview Container (180px) */}
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '180px',
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        background: '#0d1117',
+                        marginBottom: '0.875rem',
+                        border: '1px solid var(--border-subtle)',
+                        cursor: p.screenshotUrl ? 'pointer' : 'default',
+                      }}
+                      onClick={() => {
+                        if (p.screenshotUrl) {
+                          setPreviewImage({ url: p.screenshotUrl, title: `${p.employeeNama} - Postingan Terverifikasi` })
+                        }
+                      }}
+                    >
+                      {p.screenshotUrl ? (
+                        <>
+                          <img
+                            src={p.screenshotUrl}
+                            alt="Bukti Postingan"
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              transition: 'transform 0.3s ease',
+                            }}
+                          />
+                          <div
+                            style={{
+                              position: 'absolute',
+                              bottom: '8px',
+                              right: '8px',
+                              background: 'rgba(0, 0, 0, 0.75)',
+                              backdropFilter: 'blur(4px)',
+                              color: '#ffffff',
+                              padding: '3px 8px',
+                              borderRadius: '6px',
+                              fontSize: '0.6875rem',
+                              fontWeight: 600,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                            }}
+                          >
+                            <span>🔍 Lihat Foto</span>
+                          </div>
+                        </>
+                      ) : (
+                        <div
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            background: 'linear-gradient(135deg, rgba(225, 48, 108, 0.12) 0%, rgba(13, 169, 77, 0.12) 100%)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                          }}
+                        >
+                          <span style={{ fontSize: '2.25rem' }}>📸</span>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Instagram Post</span>
+                        </div>
+                      )}
                     </div>
 
                     <div
@@ -1022,12 +1110,12 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
                         fontSize: '0.8125rem',
                         color: 'var(--text-secondary)',
                         lineHeight: '1.5',
-                        background: 'var(--bg-secondary)',
+                        background: 'rgba(255, 255, 255, 0.03)',
                         padding: '0.75rem',
-                        borderRadius: 'var(--radius-md)',
+                        borderRadius: '10px',
                         marginBottom: '1rem',
-                        minHeight: '60px',
-                        maxHeight: '90px',
+                        minHeight: '55px',
+                        maxHeight: '85px',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         display: '-webkit-box',
@@ -1044,27 +1132,28 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
                       style={{
                         display: 'flex',
                         justifyContent: 'space-around',
-                        background: 'rgba(0, 0, 0, 0.2)',
+                        background: 'rgba(0, 0, 0, 0.3)',
                         padding: '0.5rem',
-                        borderRadius: 'var(--radius-md)',
+                        borderRadius: '10px',
                         marginBottom: '0.875rem',
+                        border: '1px solid var(--border-subtle)',
                       }}
                     >
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>Likes</div>
-                        <div style={{ fontWeight: 700, color: '#f43f5e', fontSize: '0.875rem' }}>
+                        <div style={{ fontWeight: 800, color: '#f43f5e', fontSize: '0.875rem' }}>
                           ❤️ {p.likes.toLocaleString('id-ID')}
                         </div>
                       </div>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>Komentar</div>
-                        <div style={{ fontWeight: 700, color: '#38bdf8', fontSize: '0.875rem' }}>
+                        <div style={{ fontWeight: 800, color: '#38bdf8', fontSize: '0.875rem' }}>
                           💬 {p.comments.toLocaleString('id-ID')}
                         </div>
                       </div>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>Views</div>
-                        <div style={{ fontWeight: 700, color: 'var(--green-light)', fontSize: '0.875rem' }}>
+                        <div style={{ fontWeight: 800, color: 'var(--green-light)', fontSize: '0.875rem' }}>
                           👁️ {p.views.toLocaleString('id-ID')}
                         </div>
                       </div>
@@ -1554,7 +1643,7 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
                   gap: '1rem',
                 }}
               >
@@ -1565,7 +1654,7 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
                       style={{
                         padding: '1rem',
                         background: 'var(--bg-primary)',
-                        borderRadius: 'var(--radius-lg)',
+                        borderRadius: '14px',
                         border: '1px solid var(--border-subtle)',
                         display: 'flex',
                         flexDirection: 'column',
@@ -1573,8 +1662,19 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
                       }}
                     >
                       <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                          <span style={{ fontSize: '0.6875rem', background: 'rgba(0, 186, 136, 0.15)', color: 'var(--green-light)', padding: '2px 6px', borderRadius: '6px', fontWeight: 600 }}>
+                        {/* Header: Category Badge & Date */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <span
+                            style={{
+                              fontSize: '0.6875rem',
+                              background: 'rgba(13, 169, 77, 0.25)',
+                              color: '#ffffff',
+                              border: '1px solid rgba(117, 192, 68, 0.4)',
+                              padding: '2px 8px',
+                              borderRadius: '20px',
+                              fontWeight: 700,
+                            }}
+                          >
                             {post.contentTypeNama || 'Konten Promosi'}
                           </span>
                           <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
@@ -1582,18 +1682,92 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
                           </span>
                         </div>
 
+                        {/* Medium Image Preview Container (160px) */}
+                        <div
+                          style={{
+                            width: '100%',
+                            height: '160px',
+                            borderRadius: '10px',
+                            overflow: 'hidden',
+                            position: 'relative',
+                            background: '#0a0d12',
+                            marginBottom: '0.75rem',
+                            border: '1px solid var(--border-subtle)',
+                            cursor: post.screenshotUrl ? 'pointer' : 'default',
+                          }}
+                          onClick={() => {
+                            if (post.screenshotUrl) {
+                              setPreviewImage({
+                                url: post.screenshotUrl,
+                                title: `${selectedAdvocate.nama} - ${post.contentTypeNama || 'Konten Promosi'}`
+                              })
+                            }
+                          }}
+                        >
+                          {post.screenshotUrl ? (
+                            <>
+                              <img
+                                src={post.screenshotUrl}
+                                alt="Bukti Postingan"
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover',
+                                  transition: 'transform 0.2s ease',
+                                }}
+                              />
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  bottom: '6px',
+                                  right: '6px',
+                                  background: 'rgba(0, 0, 0, 0.75)',
+                                  backdropFilter: 'blur(4px)',
+                                  color: '#ffffff',
+                                  padding: '2px 6px',
+                                  borderRadius: '4px',
+                                  fontSize: '0.625rem',
+                                  fontWeight: 600,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '2px',
+                                }}
+                              >
+                                <span>🔍 Perbesar</span>
+                              </div>
+                            </>
+                          ) : (
+                            <div
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                background: 'linear-gradient(135deg, rgba(225, 48, 108, 0.1) 0%, rgba(13, 169, 77, 0.1) 100%)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '4px',
+                              }}
+                            >
+                              <span style={{ fontSize: '1.75rem' }}>📸</span>
+                              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Instagram Post</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Caption Text */}
                         <p
                           style={{
                             fontSize: '0.8125rem',
                             color: 'var(--text-secondary)',
                             lineHeight: '1.4',
-                            margin: '8px 0',
-                            minHeight: '45px',
-                            maxHeight: '65px',
+                            margin: '0 0 8px 0',
+                            minHeight: '40px',
+                            maxHeight: '60px',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             display: '-webkit-box',
-                            WebkitLineClamp: 3,
+                            WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
                           }}
                         >
@@ -1602,6 +1776,7 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
                       </div>
 
                       <div>
+                        {/* Metrics bar */}
                         <div
                           style={{
                             display: 'flex',
@@ -1612,9 +1787,9 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
                             marginBottom: '8px',
                           }}
                         >
-                          <span style={{ color: '#f43f5e', fontWeight: 600 }}>❤️ {post.likes}</span>
-                          <span style={{ color: '#38bdf8', fontWeight: 600 }}>💬 {post.comments}</span>
-                          <span style={{ color: 'var(--green-light)', fontWeight: 600 }}>👁️ {post.views}</span>
+                          <span style={{ color: '#f43f5e', fontWeight: 700 }}>❤️ {post.likes}</span>
+                          <span style={{ color: '#38bdf8', fontWeight: 700 }}>💬 {post.comments}</span>
+                          <span style={{ color: 'var(--green-light)', fontWeight: 700 }}>👁️ {post.views}</span>
                         </div>
 
                         <a
@@ -1627,7 +1802,7 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
                             textAlign: 'center',
                             display: 'block',
                             fontSize: '0.75rem',
-                            padding: '4px',
+                            padding: '6px',
                             textDecoration: 'none',
                           }}
                         >
@@ -1642,6 +1817,92 @@ export default function AnalitikClient({ initialData }: AnalitikClientProps) {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL LIGHTBOX PREVIEW GAMBAR POSTINGAN                                    */}
+      {/* ========================================================================= */}
+      {previewImage && (
+        <div
+          className="modal-backdrop animate-fade-in"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(10px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1100,
+            padding: '1.5rem',
+          }}
+          onClick={() => setPreviewImage(null)}
+        >
+          <div
+            className="modal-card animate-scale-in"
+            style={{
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-default)',
+              borderRadius: '16px',
+              maxWidth: '540px',
+              width: '100%',
+              overflow: 'hidden',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                padding: '1rem 1.25rem',
+                borderBottom: '1px solid var(--border-subtle)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <div style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>
+                {previewImage.title}
+              </div>
+              <button
+                onClick={() => setPreviewImage(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  fontSize: '1.25rem',
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ padding: '1rem', background: '#0a0d12', textAlign: 'center' }}>
+              <img
+                src={previewImage.url}
+                alt="Preview Postingan"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '65vh',
+                  objectFit: 'contain',
+                  borderRadius: '8px',
+                }}
+              />
+            </div>
+
+            <div style={{ padding: '0.875rem 1.25rem', textAlign: 'right' }}>
+              <button
+                onClick={() => setPreviewImage(null)}
+                className="btn btn--secondary"
+                style={{ fontSize: '0.8125rem' }}
+              >
+                Tutup
+              </button>
             </div>
           </div>
         </div>

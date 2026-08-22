@@ -64,7 +64,7 @@ export async function getCabangList() {
     return { success: true, data }
   } catch (error: any) {
     console.error('Error fetching cabang:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }
 
@@ -95,8 +95,16 @@ export async function getKaryawanList() {
     return { success: true, data }
   } catch (error: any) {
     console.error('Error fetching karyawan:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
+}
+
+// SECURITY: Validasi password yang lebih ketat
+function validatePassword(password: string): string | null {
+  if (!password || password.length < 8) return 'Password minimal 8 karakter'
+  if (!/[A-Z]/.test(password)) return 'Password harus mengandung minimal 1 huruf besar'
+  if (!/[0-9]/.test(password)) return 'Password harus mengandung minimal 1 angka'
+  return null
 }
 
 // Create a new employee (Auth + User Profile)
@@ -104,8 +112,9 @@ export async function createKaryawan(data: KaryawanData) {
   try {
     const { supabase, adminId, kanwilId } = await getAdminContext()
 
-    if (!data.password || data.password.length < 6) {
-      return { success: false, error: 'Password minimal 6 karakter' }
+    const passwordError = validatePassword(data.password || '')
+    if (passwordError) {
+      return { success: false, error: passwordError }
     }
 
     const email = `${data.nip.toLowerCase().trim()}@irs.pegadaian.internal`
@@ -114,7 +123,7 @@ export async function createKaryawan(data: KaryawanData) {
     const standalone = getStandaloneClient()
     const { data: authData, error: authErr } = await standalone.auth.signUp({
       email,
-      password: data.password,
+      password: data.password!,
     })
 
     if (authErr) {
@@ -153,15 +162,16 @@ export async function createKaryawan(data: KaryawanData) {
     return { success: true }
   } catch (error: any) {
     console.error('Error creating karyawan:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }
 
 // Update an existing employee profile
 export async function updateKaryawan(id: string, data: Partial<KaryawanData>) {
   try {
-    const { supabase } = await getAdminContext()
+    const { supabase, kanwilId } = await getAdminContext()
 
+    // SECURITY: Pastikan karyawan yang diupdate berada di kanwil yang sama
     const { error } = await supabase
       .from('users')
       .update({
@@ -173,6 +183,7 @@ export async function updateKaryawan(id: string, data: Partial<KaryawanData>) {
         status: data.status,
       })
       .eq('id', id)
+      .eq('kanwil_id', kanwilId)
 
     if (error) throw error
 
@@ -180,7 +191,7 @@ export async function updateKaryawan(id: string, data: Partial<KaryawanData>) {
     return { success: true }
   } catch (error: any) {
     console.error('Error updating karyawan:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }
 
@@ -425,7 +436,7 @@ export async function bulkUploadKaryawan(csvText: string) {
     }
   } catch (error: any) {
     console.error('Error bulk uploading karyawan:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }
 
@@ -438,6 +449,11 @@ function extractInstagramShortcode(url: string): string | null {
 export async function syncEmployeeEngagement(employeeId: string) {
   try {
     const { supabase } = await getAdminContext() // Pastikan pengakses adalah Admin Kanwil sah
+
+    // SECURITY: Validasi format employeeId
+    if (!employeeId || !/^\d+$/.test(employeeId)) {
+      return { success: false, error: 'ID karyawan tidak valid.' }
+    }
 
     // 1. Ambil semua postingan Instagram yang berstatus disetujui (approved) milik karyawan ini
     const { data: posts, error: postsErr } = await supabase
@@ -553,6 +569,6 @@ export async function syncEmployeeEngagement(employeeId: string) {
     }
   } catch (error: any) {
     console.error('Error in syncEmployeeEngagement:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }

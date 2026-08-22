@@ -78,7 +78,7 @@ export async function getSocialAccounts() {
     }
   } catch (error: any) {
     console.error('Error fetching social accounts:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }
 
@@ -87,20 +87,41 @@ export async function linkSocialAccount(platform: string, handle: string) {
   try {
     const { supabase, userId } = await getKaryawanContext()
 
+    const cleanPlatform = platform.toLowerCase().trim()
     const sanitizedHandle = handle.trim().replace(/^@+/, '')
+
     if (!sanitizedHandle) {
       return { success: false, error: 'Username/handle tidak boleh kosong' }
     }
 
+    // =========================================================================
+    // SECURITY & BUSINESS RULE: 1 Akun per Media Sosial
+    // Cek apakah user sudah memiliki akun yang tertaut untuk platform ini
+    // =========================================================================
+    const { data: existingPlatformAccount } = await supabase
+      .from('social_accounts')
+      .select('id, handle')
+      .eq('user_id', userId)
+      .eq('platform', cleanPlatform)
+      .maybeSingle()
+
+    if (existingPlatformAccount) {
+      const platformDisplay = cleanPlatform.charAt(0).toUpperCase() + cleanPlatform.slice(1)
+      return {
+        success: false,
+        error: `Anda sudah menautkan 1 akun ${platformDisplay} (@${existingPlatformAccount.handle}). Setiap media sosial hanya boleh ditautkan maksimal 1 akun. Silakan putuskan tautan akun lama terlebih dahulu jika ingin menggantinya.`,
+      }
+    }
+
     const { error } = await supabase.from('social_accounts').insert({
       user_id: userId,
-      platform: platform.toLowerCase(),
+      platform: cleanPlatform,
       handle: sanitizedHandle,
     })
 
     if (error) {
       if (error.message.includes('unique') || error.code === '23505') {
-        return { success: false, error: `Username @${sanitizedHandle} untuk platform ${platform} sudah ditautkan` }
+        return { success: false, error: `Akun untuk platform ${cleanPlatform} sudah ditautkan.` }
       }
       throw error
     }
@@ -109,7 +130,7 @@ export async function linkSocialAccount(platform: string, handle: string) {
     return { success: true }
   } catch (error: any) {
     console.error('Error linking social account:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }
 
@@ -130,6 +151,6 @@ export async function unlinkSocialAccount(id: string) {
     return { success: true }
   } catch (error: any) {
     console.error('Error unlinking social account:', error.message)
-    return { success: false, error: error.message }
+    return { success: false, error: 'Terjadi kesalahan sistem. Silakan coba lagi.' }
   }
 }

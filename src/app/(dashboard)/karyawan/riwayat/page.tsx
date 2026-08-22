@@ -2,7 +2,6 @@ import { getRiwayatSubmissions, getPointsSummary } from './actions'
 import RiwayatClient from './riwayat-client'
 
 export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
 
 export default async function KaryawanRiwayatPage() {
   const [riwayatRes, pointsRes] = await Promise.all([

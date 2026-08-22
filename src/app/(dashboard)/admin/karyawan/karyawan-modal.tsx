@@ -89,8 +89,18 @@ export default function KaryawanModal({
           setError(result.error || 'Gagal mengubah data karyawan')
         }
       } else {
-        if (!password || password.length < 6) {
-          setError('Password minimal 6 karakter')
+        if (!password || password.length < 8) {
+          setError('Password minimal 8 karakter')
+          setIsLoading(false)
+          return
+        }
+        if (!/[A-Z]/.test(password)) {
+          setError('Password harus mengandung minimal 1 huruf besar')
+          setIsLoading(false)
+          return
+        }
+        if (!/[0-9]/.test(password)) {
+          setError('Password harus mengandung minimal 1 angka')
           setIsLoading(false)
           return
         }
@@ -405,9 +415,12 @@ export default function KaryawanModal({
                       onChange={(e) => setPassword(e.target.value)}
                       required={!isEditMode}
                       disabled={isLoading}
-                      placeholder="Minimal 6 karakter"
+                      placeholder="Min. 8 karakter (ada huruf besar & angka)"
                       style={{ paddingLeft: '1rem' }}
                     />
+                  </div>
+                  <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    🔒 Password min. 8 karakter, wajib kombinasi 1 huruf besar dan 1 angka.
                   </div>
                 </div>
               )}
