@@ -18,10 +18,12 @@ export default async function Home() {
     .maybeSingle()
 
   if (!profile) {
+    await supabase.auth.signOut().catch(() => {})
     redirect('/login?reason=unregistered')
   }
 
   if (profile.status !== 'active') {
+    await supabase.auth.signOut().catch(() => {})
     redirect('/login?reason=inactive')
   }
 

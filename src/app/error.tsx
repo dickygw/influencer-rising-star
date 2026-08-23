@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function ErrorBoundary({
   error,
@@ -9,6 +9,8 @@ export default function ErrorBoundary({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const [showDetails, setShowDetails] = useState(false)
+
   useEffect(() => {
     console.error('Captured by Next.js Error Boundary:', error)
   }, [error])
@@ -33,7 +35,7 @@ export default function ErrorBoundary({
     >
       <div
         style={{
-          maxWidth: '480px',
+          maxWidth: '520px',
           width: '100%',
           background: 'rgba(255, 255, 255, 0.04)',
           border: '1px solid rgba(255, 255, 255, 0.12)',
@@ -52,15 +54,46 @@ export default function ErrorBoundary({
             fontSize: '0.875rem',
             color: 'rgba(255, 255, 255, 0.7)',
             lineHeight: 1.5,
-            marginBottom: '1.5rem',
+            marginBottom: '1rem',
           }}
         >
-          {error?.message && !error.message.includes('Minified')
-            ? error.message
-            : 'Sesi Anda atau koneksi ke server sedang mengalami gangguan. Silakan muat ulang atau masuk kembali.'}
+          {error?.message || 'Sesi Anda atau koneksi ke server sedang mengalami gangguan.'}
         </p>
 
-        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+        {error?.digest && (
+          <div
+            style={{
+              fontSize: '0.75rem',
+              color: 'rgba(255, 255, 255, 0.4)',
+              marginBottom: '1rem',
+              fontFamily: 'monospace',
+            }}
+          >
+            Digest ID: {error.digest}
+          </div>
+        )}
+
+        {showDetails && error?.stack && (
+          <pre
+            style={{
+              textAlign: 'left',
+              background: 'rgba(0, 0, 0, 0.5)',
+              padding: '0.75rem',
+              borderRadius: '8px',
+              fontSize: '0.6875rem',
+              color: '#f87171',
+              maxHeight: '160px',
+              overflowY: 'auto',
+              marginBottom: '1rem',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-all',
+            }}
+          >
+            {error.stack}
+          </pre>
+        )}
+
+        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button
             onClick={() => reset()}
             style={{
@@ -93,6 +126,23 @@ export default function ErrorBoundary({
           >
             Halaman Login
           </button>
+          {error?.stack && (
+            <button
+              onClick={() => setShowDetails(!showDetails)}
+              style={{
+                padding: '0.625rem 1rem',
+                borderRadius: '8px',
+                border: 'none',
+                background: 'rgba(255, 255, 255, 0.08)',
+                color: 'rgba(255, 255, 255, 0.6)',
+                fontWeight: 500,
+                cursor: 'pointer',
+                fontSize: '0.75rem',
+              }}
+            >
+              {showDetails ? 'Sembunyikan Detail' : 'Detail Error'}
+            </button>
+          )}
         </div>
       </div>
     </div>
