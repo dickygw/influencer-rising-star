@@ -13,6 +13,11 @@ export default function ErrorBoundary({
     console.error('Captured by Next.js Error Boundary:', error)
   }, [error])
 
+  // Ignore Next.js internal redirects
+  if (error?.digest?.startsWith('NEXT_REDIRECT') || error?.message?.includes('NEXT_REDIRECT')) {
+    return null
+  }
+
   return (
     <div
       style={{
@@ -50,7 +55,9 @@ export default function ErrorBoundary({
             marginBottom: '1.5rem',
           }}
         >
-          {error?.message || 'Koneksi ke server atau sesi Anda sedang mengalami gangguan.'}
+          {error?.message && !error.message.includes('Minified')
+            ? error.message
+            : 'Sesi Anda atau koneksi ke server sedang mengalami gangguan. Silakan muat ulang atau masuk kembali.'}
         </p>
 
         <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
