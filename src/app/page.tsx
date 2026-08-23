@@ -1,34 +1,44 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
-
 export default async function Home() {
   try {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!user) {
+    if (authError || !user) {
       redirect('/login')
     }
 
     // Fetch user role to redirect to appropriate dashboard
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('users')
-      .select('role')
+      .select('role, status')
       .eq('auth_uid', user.id)
       .single()
 
-    if (profile?.role === 'admin_kanwil' || profile?.role === 'admin_pusat') {
+    if (profileError || !profile) {
+      console.error('Home: Profile not found for authenticated user:', profileError)
+      // Sign out auth if profile does not exist to break any potential redirect loops
+      await supabase.auth.signOut().catch(() => {})
+      redirect('/login?reason=unregistered')
+    }
+
+    if (profile.status !== 'active') {
+      await supabase.auth.signOut().catch(() => {})
+      redirect('/login?reason=inactive')
+    }
+
+    if (profile.role === 'admin_kanwil' || profile.role === 'admin_pusat') {
       redirect('/admin')
     } else {
       redirect('/karyawan')
     }
-  } catch (error) {
-    // Re-throw Next.js redirect errors (they use thrown responses internally)
+  } catch (error: any) {
     if (error && typeof error === 'object' && 'digest' in error) {
       throw error
     }
-    // For any other error (Supabase unreachable, etc.), redirect to login
+    console.error('Home: Unexpected error:', error)
     redirect('/login')
   }
 }

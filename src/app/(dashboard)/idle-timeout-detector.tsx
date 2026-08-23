@@ -35,7 +35,7 @@ export function IdleTimeoutDetector({ role }: IdleTimeoutDetectorProps) {
     }
 
     window.location.href = `/login?reason=idle_timeout&durasi=${isAdmin ? '5' : '10'}`
-  }, [isAdmin, supabase.auth])
+  }, [isAdmin])
 
   useEffect(() => {
     lastActivityRef.current = Date.now()

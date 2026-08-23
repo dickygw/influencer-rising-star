@@ -1,60 +1,77 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { DashboardShell } from './dashboard-shell'
- 
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  let profile = null
+  let kanwilName = ''
+
   try {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user }, error: authErr } = await supabase.auth.getUser()
 
-    if (!user) {
+    if (authErr || !user) {
       redirect('/login')
     }
 
-    const { data: profile } = await supabase
+    const { data: userProfile, error: profileErr } = await supabase
       .from('users')
-      .select('id, nip, nama, role, kanwil_id, cabang_id, avatar_url')
+      .select('id, nip, nama, role, kanwil_id, cabang_id, avatar_url, status')
       .eq('auth_uid', user.id)
       .single()
 
-    if (!profile) {
-      redirect('/login')
+    if (profileErr || !userProfile) {
+      console.error('Profile not found in DashboardLayout:', profileErr)
+      await supabase.auth.signOut().catch(() => {})
+      redirect('/login?reason=unregistered')
     }
 
-    // Fetch kanwil name
-    let kanwilName = ''
+    if (userProfile.status !== 'active') {
+      await supabase.auth.signOut().catch(() => {})
+      redirect('/login?reason=inactive')
+    }
+
+    profile = userProfile
+
+    // Fetch kanwil name safely
     if (profile.kanwil_id) {
-      const { data: kanwil } = await supabase
-        .from('kanwil')
-        .select('nama')
-        .eq('id', profile.kanwil_id)
-        .single()
-      kanwilName = kanwil?.nama || ''
+      try {
+        const { data: kanwil } = await supabase
+          .from('kanwil')
+          .select('nama')
+          .eq('id', profile.kanwil_id)
+          .single()
+        kanwilName = kanwil?.nama || ''
+      } catch (err) {
+        console.error('Error fetching kanwil name:', err)
+      }
     }
-
-    return (
-      <DashboardShell
-        user={{
-          nama: profile.nama,
-          nip: profile.nip,
-          role: profile.role,
-          kanwilName,
-        }}
-      >
-        {children}
-      </DashboardShell>
-    )
-  } catch (error) {
-    // Re-throw Next.js redirect errors (they use thrown responses internally)
+  } catch (error: any) {
     if (error && typeof error === 'object' && 'digest' in error) {
       throw error
     }
-    // For any other error, redirect to login
+    console.error('Unexpected error in DashboardLayout:', error)
     redirect('/login')
   }
+
+  if (!profile) {
+    redirect('/login')
+  }
+
+  return (
+    <DashboardShell
+      user={{
+        nama: profile.nama,
+        nip: profile.nip,
+        role: profile.role,
+        kanwilName,
+      }}
+    >
+      {children}
+    </DashboardShell>
+  )
 }

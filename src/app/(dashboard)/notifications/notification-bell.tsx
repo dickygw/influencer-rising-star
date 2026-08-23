@@ -46,7 +46,7 @@ export default function NotificationBell() {
       supabase.removeChannel(channel)
       document.removeEventListener('mousedown', handleOutsideClick)
     }
-  }, [supabase])
+  }, [])
 
   const handleMarkAsRead = async () => {
     const res = await markAllAsRead()

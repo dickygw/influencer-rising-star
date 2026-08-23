@@ -95,7 +95,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [isAdmin, supabase])
+  }, [isAdmin])
 
   const getInitials = (name: string) => {
     return name
