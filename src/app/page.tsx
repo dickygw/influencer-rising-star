@@ -3,27 +3,42 @@ import { createClient } from '@/lib/supabase/server'
 
 export default async function Home() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
 
-  if (!user) {
+  let authUser = null
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    authUser = user
+  } catch (e) {
+    console.error('Home: auth.getUser() failed:', e)
+  }
+
+  // redirect() MUST be called outside try/catch
+  if (!authUser) {
     redirect('/login')
   }
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role, status')
-    .eq('auth_uid', user.id)
-    .maybeSingle()
+  let profile = null
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('role, status')
+      .eq('auth_uid', authUser.id)
+      .maybeSingle()
 
+    if (error) {
+      console.error('Home: profile query error:', error.message)
+    }
+    profile = data
+  } catch (e) {
+    console.error('Home: profile fetch crashed:', e)
+  }
+
+  // redirect() calls OUTSIDE try/catch
   if (!profile) {
-    await supabase.auth.signOut().catch(() => {})
     redirect('/login?reason=unregistered')
   }
 
   if (profile.status !== 'active') {
-    await supabase.auth.signOut().catch(() => {})
     redirect('/login?reason=inactive')
   }
 

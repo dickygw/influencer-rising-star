@@ -15,10 +15,14 @@ export default function ErrorBoundary({
     console.error('Captured by Next.js Error Boundary:', error)
   }, [error])
 
-  // Ignore Next.js internal redirects
-  if (error?.digest?.startsWith('NEXT_REDIRECT') || error?.message?.includes('NEXT_REDIRECT')) {
+  // Allow Next.js internal redirects to pass through
+  const digest = error?.digest || ''
+  if (digest.includes('NEXT_REDIRECT') || error?.message?.includes('NEXT_REDIRECT')) {
     return null
   }
+
+  // For React error #441 (Server Component error), show a clean recovery UI
+  const isServerError = error?.message?.includes('#441') || digest
 
   return (
     <div
@@ -60,7 +64,7 @@ export default function ErrorBoundary({
           {error?.message || 'Sesi Anda atau koneksi ke server sedang mengalami gangguan.'}
         </p>
 
-        {error?.digest && (
+        {digest && (
           <div
             style={{
               fontSize: '0.75rem',
@@ -69,11 +73,11 @@ export default function ErrorBoundary({
               fontFamily: 'monospace',
             }}
           >
-            Digest ID: {error.digest}
+            Digest ID: {digest}
           </div>
         )}
 
-        {showDetails && error?.stack && (
+        {showDetails && (
           <pre
             style={{
               textAlign: 'left',
@@ -89,7 +93,7 @@ export default function ErrorBoundary({
               wordBreak: 'break-all',
             }}
           >
-            {error.stack}
+            {error?.stack || error?.message || 'No stack trace available'}
           </pre>
         )}
 
@@ -126,23 +130,21 @@ export default function ErrorBoundary({
           >
             Halaman Login
           </button>
-          {error?.stack && (
-            <button
-              onClick={() => setShowDetails(!showDetails)}
-              style={{
-                padding: '0.625rem 1rem',
-                borderRadius: '8px',
-                border: 'none',
-                background: 'rgba(255, 255, 255, 0.08)',
-                color: 'rgba(255, 255, 255, 0.6)',
-                fontWeight: 500,
-                cursor: 'pointer',
-                fontSize: '0.75rem',
-              }}
-            >
-              {showDetails ? 'Sembunyikan Detail' : 'Detail Error'}
-            </button>
-          )}
+          <button
+            onClick={() => setShowDetails(!showDetails)}
+            style={{
+              padding: '0.625rem 1rem',
+              borderRadius: '8px',
+              border: 'none',
+              background: 'rgba(255, 255, 255, 0.08)',
+              color: 'rgba(255, 255, 255, 0.6)',
+              fontWeight: 500,
+              cursor: 'pointer',
+              fontSize: '0.75rem',
+            }}
+          >
+            {showDetails ? 'Sembunyikan Detail' : 'Detail Error'}
+          </button>
         </div>
       </div>
     </div>

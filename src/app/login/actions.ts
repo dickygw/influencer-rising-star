@@ -56,41 +56,45 @@ export async function login(
   }
 
   // 1. Check if the user exists in database but has no auth_uid (lazy registration check via RPC to bypass guest RLS block)
-  const { data: isLazy, error: rpcCheckErr } = await supabase.rpc('check_lazy_registration', {
-    p_nip: nip.trim()
-  })
-
-  if (rpcCheckErr) {
-    console.error('RPC check_lazy_registration error:', rpcCheckErr.message)
-  }
-
-  if (isLazy) {
-    const email = `${nip.toLowerCase().trim()}@irs.pegadaian.internal`
-    
-    // Register the user on the fly in Supabase Auth
-    const { data: authData, error: signUpErr } = await supabase.auth.signUp({
-      email,
-      password,
+  try {
+    const { data: isLazy, error: rpcCheckErr } = await supabase.rpc('check_lazy_registration', {
+      p_nip: nip.trim()
     })
 
-    if (signUpErr) {
-      console.error('Lazy registration signUp error:', signUpErr.message)
-      return { error: 'Gagal meregistrasi akun perdana Anda. Silakan hubungi Admin.' }
+    if (rpcCheckErr) {
+      console.error('RPC check_lazy_registration error:', rpcCheckErr.message)
     }
 
-    const authUid = authData.user?.id
-    if (authUid) {
-      // Call RPC to securely link the auth_uid bypassing RLS
-      const { data: success, error: rpcErr } = await supabase.rpc('register_uploaded_user', {
-        p_nip: nip.trim(),
-        p_auth_uid: authUid,
+    if (isLazy) {
+      const email = `${nip.toLowerCase().trim()}@irs.pegadaian.internal`
+      
+      // Register the user on the fly in Supabase Auth
+      const { data: authData, error: signUpErr } = await supabase.auth.signUp({
+        email,
+        password,
       })
 
-      if (rpcErr || !success) {
-        console.error('Lazy registration RPC error:', rpcErr)
-        return { error: 'Gagal menautkan akun dengan profil database.' }
+      if (signUpErr) {
+        console.error('Lazy registration signUp error:', signUpErr.message)
+        return { error: 'Gagal meregistrasi akun perdana Anda. Silakan hubungi Admin.' }
+      }
+
+      const authUid = authData.user?.id
+      if (authUid) {
+        // Call RPC to securely link the auth_uid bypassing RLS
+        const { data: success, error: rpcErr } = await supabase.rpc('register_uploaded_user', {
+          p_nip: nip.trim(),
+          p_auth_uid: authUid,
+        })
+
+        if (rpcErr || !success) {
+          console.error('Lazy registration RPC error:', rpcErr)
+          return { error: 'Gagal menautkan akun dengan profil database.' }
+        }
       }
     }
+  } catch (lazyErr) {
+    console.error('Lazy registration block error:', lazyErr)
   }
 
   // Map NIP to internal email format for Supabase Auth
@@ -116,7 +120,7 @@ export async function login(
     .from('users')
     .select('role, status')
     .eq('auth_uid', user.id)
-    .single()
+    .maybeSingle()
 
   if (!profile) {
     // Auth user exists but no profile in users table
@@ -153,10 +157,14 @@ export async function login(
     console.warn('Optional session token setup warning:', sessionErr)
   }
 
-  // Redirect based on role
-  if (profile.role === 'admin_kanwil' || profile.role === 'admin_pusat') {
-    redirect('/admin')
-  } else {
-    redirect('/karyawan')
-  }
+  // =========================================================================
+  // CRITICAL: Determine redirect path BEFORE calling redirect()
+  // redirect() throws an internal error — it MUST be the LAST statement
+  // and MUST NOT be inside any try/catch block.
+  // =========================================================================
+  const redirectPath = (profile.role === 'admin_kanwil' || profile.role === 'admin_pusat')
+    ? '/admin'
+    : '/karyawan'
+
+  redirect(redirectPath)
 }
