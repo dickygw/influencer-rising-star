@@ -134,21 +134,24 @@ export async function login(
   // Generate token unik, simpan ke DB, dan set sebagai cookie.
   // Jika user login dari device lain, token berubah → sesi lama invalid.
   // =========================================================================
-  const sessionToken = crypto.randomUUID() + '-' + Date.now().toString(36)
+  try {
+    const sessionToken = crypto.randomUUID() + '-' + Date.now().toString(36)
+    await supabase.rpc('set_session_token', {
+      p_auth_uid: user.id,
+      p_token: sessionToken,
+    })
 
-  await supabase.rpc('set_session_token', {
-    p_auth_uid: user.id,
-    p_token: sessionToken,
-  })
-
-  const cookieStore = await cookies()
-  cookieStore.set('irs_session_token', sessionToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 7, // 7 hari
-  })
+    const cookieStore = await cookies()
+    cookieStore.set('irs_session_token', sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7, // 7 hari
+    })
+  } catch (sessionErr) {
+    console.warn('Optional session token setup warning:', sessionErr)
+  }
 
   // Redirect based on role
   if (profile.role === 'admin_kanwil' || profile.role === 'admin_pusat') {
