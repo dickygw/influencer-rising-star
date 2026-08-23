@@ -58,7 +58,14 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [pendingCount, setPendingCount] = useState<number>(0)
 
-  const isAdmin = user.role === 'admin_kanwil' || user.role === 'admin_pusat'
+  const currentUser = user || {
+    nama: 'Pengguna',
+    nip: '-',
+    role: 'karyawan',
+    kanwilName: '',
+  }
+
+  const isAdmin = currentUser.role === 'admin_kanwil' || currentUser.role === 'admin_pusat'
 
   // Fetch pending submissions for admin real-time badge
   useEffect(() => {
@@ -97,8 +104,8 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
     }
   }, [isAdmin])
 
-  const getInitials = (name: string) => {
-    return name
+  const getInitials = (name?: string) => {
+    return (name || 'Pengguna')
       .split(' ')
       .filter(Boolean)
       .map((n) => n[0])
@@ -107,7 +114,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
       .slice(0, 2) || 'PG'
   }
 
-  const getRoleLabel = (role: string) => {
+  const getRoleLabel = (role?: string) => {
     switch (role) {
       case 'admin_kanwil':
         return 'Admin Kanwil'
