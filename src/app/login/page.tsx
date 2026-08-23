@@ -42,8 +42,12 @@ export default function LoginPage() {
       <div className="login-card">
         {/* Brand header */}
         <div className="login-brand">
-          <div className="login-logo">
-            <span>⭐</span>
+          <div className="login-logo" style={{ padding: '4px', overflow: 'hidden', background: 'transparent' }}>
+            <img
+              src="/logo.png"
+              alt="IRS Logo"
+              style={{ width: '48px', height: '48px', borderRadius: '12px', objectFit: 'contain' }}
+            />
           </div>
           <h1 className="login-title">Influencer Rising Star</h1>
           <p className="login-subtitle">Employee Advocacy — Sosial Media</p>

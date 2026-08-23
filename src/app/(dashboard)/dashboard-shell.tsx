@@ -220,7 +220,13 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
             title="Influencer Rising Star"
             aria-label="Toggle Navigation Drawer"
           >
-            <div className="rail-logo-inner">⭐</div>
+            <div className="rail-logo-inner" style={{ background: 'transparent', padding: 0 }}>
+              <img
+                src="/logo.png"
+                alt="IRS"
+                style={{ width: '28px', height: '28px', borderRadius: '6px', objectFit: 'contain' }}
+              />
+            </div>
           </button>
 
           {/* Hamburger toggle button */}
