@@ -6,6 +6,15 @@ export async function createClient() {
   const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/^["']|["']$/g, '').trim()
   const key = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').replace(/^["']|["']$/g, '').trim()
 
+  if (!url || !key) {
+    throw new Error(
+      `Supabase environment variables are missing. ` +
+      `NEXT_PUBLIC_SUPABASE_URL="${process.env.NEXT_PUBLIC_SUPABASE_URL || '(undefined)'}", ` +
+      `NEXT_PUBLIC_SUPABASE_ANON_KEY="${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '(set but possibly empty)' : '(undefined)'}". ` +
+      `Please check Vercel Dashboard > Settings > Environment Variables.`
+    )
+  }
+
   return createServerClient(
     url,
     key,
