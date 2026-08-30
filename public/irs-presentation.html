@@ -1,0 +1,1414 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Influencer Rising Star</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --c-deep:#123D24;
+  --c-dark:#1F5C34;
+  --c-mid:#3DA06A;
+  --c-light:#E7F3EC;
+  --c-gold:#E8AE4D;
+  --c-gold-dk:#8C5B12;
+  --c-gold-lt:#FCEFDA;
+  --c-white:#FFFFFF;
+  --c-text:#1A2E22;
+  --c-grey:#6B7C73;
+  --c-red:#A32D2D;
+  --c-red-lt:#FDECEA;
+}
+
+html,body{width:100%;height:100%;overflow:hidden;background:#0a1f12;font-family:'Poppins',sans-serif;color:var(--c-text);}
+
+/* ── SLIDE ENGINE ─────────────────────────────── */
+.deck{position:relative;width:100vw;height:100vh;overflow:hidden}
+.slide{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;
+  opacity:0;pointer-events:none;
+  background:var(--c-white);
+}
+.slide.active{opacity:1;pointer-events:all}
+
+/* ── PROGRESS BAR ─────────────────────────────── */
+#progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--c-gold),var(--c-mid));z-index:200;transition:width .5s ease}
+
+/* ── NAVIGATION ───────────────────────────────── */
+.nav{
+  position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:.75rem;z-index:200;
+  background:rgba(18,61,36,.85);backdrop-filter:blur(10px);
+  padding:.4rem .9rem;border-radius:2rem;
+  border:1px solid rgba(232,174,77,.25);
+}
+.nav button{
+  background:none;border:none;color:var(--c-gold);cursor:pointer;
+  font-size:1.3rem;line-height:1;padding:.15rem .6rem;
+  transition:opacity .2s;font-family:'Poppins',sans-serif;
+}
+.nav button:hover{opacity:.6}
+.nav span{color:#fff;font-size:.68rem;letter-spacing:.12em;min-width:3.5rem;text-align:center}
+
+/* Section badge top-right */
+.section-badge{
+  position:absolute;top:1.4rem;right:2rem;
+  font-size:.6rem;font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--c-grey);
+  display:flex;align-items:center;gap:.4rem;
+}
+.section-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--c-mid);display:block}
+
+/* ── SHARED LAYOUT ────────────────────────────── */
+.inner{width:100%;max-width:1100px;padding:0 3rem;margin:0 auto}
+.inner-sm{width:100%;max-width:900px;padding:0 3rem;margin:0 auto}
+
+/* ── TYPOGRAPHY ───────────────────────────────── */
+.eyebrow{font-size:.62rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--c-mid)}
+.eyebrow-gold{color:var(--c-gold)}
+.eyebrow-white{color:rgba(255,255,255,.5)}
+
+h1.hero{font-size:clamp(2.5rem,5.5vw,4.5rem);font-weight:900;line-height:1;text-wrap:balance;color:var(--c-text)}
+h1.hero-white{color:var(--c-white)}
+h2.slide-title{font-size:clamp(1.4rem,2.5vw,2rem);font-weight:700;color:var(--c-text);text-wrap:balance}
+h2.slide-title-white{color:var(--c-white)}
+.body{font-size:.85rem;line-height:1.75;color:var(--c-grey);max-width:58ch}
+.body-white{color:rgba(255,255,255,.65)}
+
+/* ── DIVIDER SLIDES ───────────────────────────── */
+.slide-dark{background:var(--c-deep)}
+.slide-forest{background:var(--c-dark)}
+.divider-ghost{
+  position:absolute;font-size:clamp(16rem,38vw,30rem);
+  font-weight:900;line-height:.8;
+  color:rgba(255,255,255,.05);
+  left:-.05em;top:50%;transform:translateY(-50%);
+  pointer-events:none;user-select:none;letter-spacing:-.05em;
+}
+.divider-content{position:relative;z-index:2;padding:0 3.5rem;width:100%}
+.divider-letter{font-size:clamp(4rem,9vw,7rem);font-weight:900;color:var(--c-gold);line-height:1}
+.divider-word{
+  font-size:clamp(1.2rem,3.5vw,2.5rem);font-weight:700;color:var(--c-white);
+  letter-spacing:.18em;text-transform:uppercase;margin-top:-.15em;
+}
+.divider-desc{margin-top:1.25rem;font-size:.85rem;color:rgba(255,255,255,.55);max-width:48ch;line-height:1.75}
+
+/* Pattern overlay for dark slides */
+.slide-dark::before,.slide-forest::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(circle,rgba(255,255,255,.04) 1px,transparent 1px);
+  background-size:22px 22px;
+}
+
+/* ── CARDS ────────────────────────────────────── */
+.card{background:var(--c-white);border-radius:14px;padding:1.4rem 1.6rem;box-shadow:0 2px 24px rgba(18,61,36,.09)}
+.card-green{background:var(--c-light);border-radius:14px;padding:1.4rem 1.6rem}
+.card-dark{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:1.4rem 1.6rem}
+.card-gold{background:var(--c-gold-lt);border-left:3px solid var(--c-gold);border-radius:10px;padding:1rem 1.25rem}
+
+/* ── STAT CARDS ───────────────────────────────── */
+.stat-card{background:var(--c-white);border-radius:14px;padding:1.5rem 2rem;text-align:center;box-shadow:0 2px 24px rgba(18,61,36,.09)}
+.stat-card-dark{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:1.5rem 2rem;text-align:center}
+.stat-val{font-size:clamp(2rem,4vw,3.2rem);font-weight:900;color:var(--c-dark);line-height:1;font-variant-numeric:tabular-nums}
+.stat-val-red{color:var(--c-red)}
+.stat-val-white{color:var(--c-white)}
+.stat-val-gold{color:var(--c-gold)}
+.stat-lbl{font-size:.72rem;color:var(--c-grey);margin-top:.5rem;font-weight:500;line-height:1.4}
+.stat-lbl-white{color:rgba(255,255,255,.55)}
+
+/* ── TABLES ───────────────────────────────────── */
+.tbl{width:100%;border-collapse:collapse;font-size:.8rem}
+.tbl th{background:var(--c-deep);color:var(--c-gold);padding:.55rem .85rem;text-align:left;font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.tbl td{padding:.5rem .85rem;border-bottom:1px solid var(--c-light);color:var(--c-text);font-variant-numeric:tabular-nums}
+.tbl tr.row-total td{background:var(--c-deep);color:var(--c-white);font-weight:700;border-bottom:none}
+.tbl tr.row-total td:first-child{border-radius:0 0 0 8px}
+.tbl tr.row-total td:last-child{border-radius:0 0 8px 0}
+.tbl tr:hover td{background:var(--c-light)}
+.tbl tr.row-total:hover td{background:var(--c-deep)}
+.tbl-wrap{border-radius:10px;overflow:hidden;box-shadow:0 2px 16px rgba(18,61,36,.09)}
+
+/* ── BANNERS ──────────────────────────────────── */
+.banner-green{background:linear-gradient(120deg,var(--c-dark),var(--c-mid));color:#fff;padding:1rem 1.5rem;border-radius:10px;font-weight:700;font-size:.85rem;text-align:center;line-height:1.5}
+.banner-gold{background:linear-gradient(120deg,var(--c-gold-dk),var(--c-gold));color:#fff;padding:1rem 1.5rem;border-radius:10px;font-weight:700;font-size:.85rem;text-align:center;line-height:1.5}
+.alert-box{background:var(--c-red-lt);border-left:4px solid var(--c-red);border-radius:8px;padding:.85rem 1.1rem;color:var(--c-red);font-weight:600;font-size:.8rem;line-height:1.5}
+
+/* ── PROGRESS BAR COMPARE ─────────────────────── */
+.cmp-bar-wrap{height:8px;border-radius:99px;background:var(--c-light);overflow:hidden;margin:.35rem 0}
+.cmp-bar-fill{height:100%;border-radius:99px;background:var(--c-mid);width:0;transition:width 1.2s cubic-bezier(.2,.8,.3,1)}
+.cmp-bar-fill.is-alert{background:var(--c-red)}
+
+/* ── FMSO ROW (slide 2) ───────────────────────── */
+.fmso-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem;width:100%}
+.fmso-card{border-radius:14px;padding:1.75rem 1.5rem;position:relative;overflow:hidden}
+.fmso-card-f{background:var(--c-dark)}
+.fmso-card-m{background:var(--c-red);}
+.fmso-card-s{background:var(--c-mid)}
+.fmso-card-o{background:var(--c-gold-dk)}
+.fmso-big{font-size:5.5rem;font-weight:900;line-height:1;color:rgba(255,255,255,.15);position:absolute;right:-.1em;bottom:-.15em}
+.fmso-letter{font-size:2.5rem;font-weight:900;color:var(--c-white);line-height:1}
+.fmso-title{font-size:.65rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.75);margin-top:.25rem}
+.fmso-desc{font-size:.78rem;color:rgba(255,255,255,.65);margin-top:.75rem;line-height:1.6}
+
+/* ── SLIDE 1 HERO ─────────────────────────────── */
+.hero-fmso{display:flex;gap:.75rem;margin-top:2.5rem}
+.fmso-chip{
+  padding:.55rem 1.2rem;border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:.2rem;
+}
+.fmso-chip-letter{font-size:1.5rem;font-weight:900;color:#fff}
+.fmso-chip-label{font-size:.58rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+
+.skyline{position:absolute;bottom:0;left:0;right:0;height:90px;display:flex;align-items:flex-end;padding:0 2rem;gap:3px;overflow:hidden}
+.sky-bar{border-radius:3px 3px 0 0;background:linear-gradient(to top,var(--c-mid),var(--c-light));opacity:.35;transform-origin:bottom;transform:scaleY(0)}
+
+/* ── SLIDE 5 COMPARE ─────────────────────────── */
+.cmp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.1rem;width:100%}
+.cmp-card{border-radius:12px;padding:1.25rem 1.35rem;background:var(--c-white);box-shadow:0 2px 16px rgba(18,61,36,.08)}
+.cmp-card.is-highlight{border:2px solid var(--c-red);background:var(--c-red-lt)}
+.cmp-metric{font-size:.72rem;font-weight:600;color:var(--c-grey);letter-spacing:.04em;margin-bottom:.85rem}
+.cmp-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.2rem}
+.cmp-city,.cmp-nat{font-size:.7rem;font-weight:600}
+.cmp-city{color:var(--c-dark)}
+.cmp-nat{color:var(--c-grey)}
+.cmp-val{font-size:1.4rem;font-weight:800;color:var(--c-dark);font-variant-numeric:tabular-nums}
+.cmp-val.is-alert{color:var(--c-red)}
+.cmp-vs{font-size:.68rem;color:var(--c-grey);margin:.5rem 0 .2rem}
+
+/* ── SLIDE 9 VS ───────────────────────────────── */
+.vs-wrap{display:flex;align-items:center;gap:2rem;justify-content:center}
+.vs-num{text-align:center}
+.vs-big{font-size:clamp(5rem,14vw,10rem);font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+.vs-label{font-size:.75rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--c-grey);margin-top:.5rem}
+.vs-divider{font-size:clamp(2rem,5vw,3.5rem);font-weight:300;color:var(--c-grey);opacity:.4;flex-shrink:0}
+
+/* ── SLIDE 10 EQUATION ────────────────────────── */
+.eq-row{display:flex;align-items:center;justify-content:center;gap:1.25rem;flex-wrap:wrap}
+.eq-box{border-radius:12px;padding:1.1rem 1.5rem;text-align:center;min-width:180px}
+.eq-box-geo{background:var(--c-red-lt);border:2px solid var(--c-red)}
+.eq-box-dig{background:var(--c-gold-lt);border:2px solid var(--c-gold)}
+.eq-box-result{background:var(--c-dark);border:2px solid var(--c-mid)}
+.eq-title{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--c-grey)}
+.eq-title-white{color:rgba(255,255,255,.7)}
+.eq-val{font-size:1.1rem;font-weight:800;color:var(--c-text);margin-top:.2rem}
+.eq-val-white{color:var(--c-white)}
+.eq-op{font-size:2.5rem;font-weight:900;color:var(--c-mid);line-height:1;flex-shrink:0}
+.eq-op-eq{color:var(--c-dark)}
+
+/* ── SLIDE 12 FUNNEL ─────────────────────────── */
+.funnel-wrap{display:flex;align-items:center;gap:.5rem;overflow-x:auto;padding:.5rem 0}
+.funnel-box{
+  border-radius:8px;padding:.7rem 1rem;text-align:center;white-space:nowrap;
+  font-size:.72rem;font-weight:600;background:var(--c-light);color:var(--c-dark);
+  flex-shrink:0;position:relative;
+}
+.funnel-box::after{
+  content:'→';position:absolute;right:-.9rem;top:50%;transform:translateY(-50%);
+  color:var(--c-grey);font-size:.8rem;
+}
+.funnel-box:last-child::after{display:none}
+.funnel-box.is-active{background:var(--c-dark);color:#fff}
+
+/* advocacy arrow SVG */
+.advocacy-svg{width:100%;height:60px;overflow:visible}
+
+/* ── SLIDE 14 STEPS ──────────────────────────── */
+.steps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;width:100%;position:relative}
+.step-card{border-radius:0;padding:1.5rem 1.35rem;background:var(--c-white);border-top:3px solid var(--c-light);position:relative}
+.step-card::after{
+  content:'';position:absolute;top:50%;right:0;transform:translate(50%,-50%);
+  width:0;height:0;border-top:8px solid transparent;border-bottom:8px solid transparent;
+  border-left:10px solid var(--c-light);z-index:2;
+}
+.step-card:last-child::after{display:none}
+.step-card:first-child{border-radius:14px 0 0 14px}
+.step-card:last-child{border-radius:0 14px 14px 0}
+.step-num{font-size:2.5rem;font-weight:900;color:var(--c-light);line-height:1}
+.step-icon{font-size:1.6rem;margin-bottom:.5rem}
+.step-title{font-size:.85rem;font-weight:700;color:var(--c-dark);margin-bottom:.35rem}
+.step-desc{font-size:.72rem;color:var(--c-grey);line-height:1.6}
+.steps-wrapper{width:100%;box-shadow:0 2px 24px rgba(18,61,36,.1);border-radius:14px;overflow:hidden}
+
+/* ── SLIDE 16 BENCHMARK ──────────────────────── */
+.bench-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.1rem;width:100%}
+.bench-card{border-radius:12px;padding:1.35rem;background:var(--c-white);box-shadow:0 2px 16px rgba(18,61,36,.08);border-top:3px solid var(--c-mid)}
+.bench-co{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--c-grey);margin-bottom:.5rem}
+.bench-val{font-size:2rem;font-weight:900;color:var(--c-dark);line-height:1;font-variant-numeric:tabular-nums}
+.bench-metric{font-size:.7rem;color:var(--c-mid);font-weight:600;margin-top:.1rem}
+.bench-note{font-size:.72rem;color:var(--c-grey);margin-top:.75rem;line-height:1.6}
+
+/* ── SLIDE 19 ROI ────────────────────────────── */
+.roi-chart-wrap{width:100%;height:220px;position:relative}
+
+/* ── SLIDE 20 ROADMAP ────────────────────────── */
+.roadmap-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;width:100%}
+.rm-card{border-radius:14px;padding:1.75rem 1.5rem;position:relative;overflow:hidden}
+.rm-card-1{background:var(--c-light);border:2px solid var(--c-mid)}
+.rm-card-2{background:var(--c-white);border:2px solid var(--c-dark);box-shadow:0 4px 24px rgba(18,61,36,.12)}
+.rm-card-3{background:var(--c-dark)}
+.rm-phase{font-size:.62rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.5rem}
+.rm-phase-1{color:var(--c-mid)}
+.rm-phase-2{color:var(--c-dark)}
+.rm-phase-3{color:rgba(255,255,255,.6)}
+.rm-title{font-size:1.1rem;font-weight:800;color:var(--c-text)}
+.rm-title-white{color:#fff}
+.rm-range{font-size:.7rem;font-weight:600;color:var(--c-gold);margin-top:.2rem}
+.rm-count{font-size:.75rem;color:var(--c-grey);margin-top:.4rem}
+.rm-count-white{color:rgba(255,255,255,.6)}
+.rm-items{margin-top:1rem;font-size:.72rem;color:var(--c-grey);line-height:1.8;list-style:none}
+.rm-items-white li{color:rgba(255,255,255,.65)}
+.rm-items li::before{content:'→ ';color:var(--c-mid);font-weight:700}
+.rm-items-white li::before{color:var(--c-gold)}
+.rm-progress-wrap{margin-top:1.25rem;height:5px;background:rgba(0,0,0,.08);border-radius:99px;overflow:hidden}
+.rm-progress-bar{height:100%;border-radius:99px;width:0;transition:width 1.5s ease}
+.rm-progress-bar-1{background:var(--c-mid)}
+.rm-progress-bar-2{background:var(--c-dark)}
+.rm-progress-bar-3{background:var(--c-gold)}
+.rm-pct{position:absolute;top:1rem;right:1.25rem;font-size:2.5rem;font-weight:900;opacity:.1}
+.rm-pct-1{color:var(--c-dark)}
+.rm-pct-3{color:#fff}
+
+/* ── SLIDE 21 CLOSING ────────────────────────── */
+.rec-list{list-style:none;display:flex;flex-direction:column;gap:.85rem}
+.rec-item{display:flex;align-items:flex-start;gap:.85rem;font-size:.85rem;color:rgba(255,255,255,.8);line-height:1.6}
+.rec-icon{width:28px;height:28px;border-radius:50%;background:var(--c-gold);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.05rem;font-size:.7rem;font-weight:700;color:var(--c-dark)}
+.rocket{position:absolute;right:3rem;bottom:3rem;font-size:5rem;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+
+/* ── LOGO MARK ───────────────────────────────── */
+.logo-mark{position:absolute;top:1.4rem;left:2rem;display:flex;align-items:center;gap:.6rem}
+.logo-badge{height:32px;padding:0 10px;background:var(--c-deep);border-radius:6px;display:flex;align-items:center}
+.logo-text{font-size:.6rem;font-weight:700;letter-spacing:.04em;color:var(--c-gold);line-height:1.3;text-align:center}
+
+/* ── UTILITY ─────────────────────────────────── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem}
+.flex-col{display:flex;flex-direction:column;gap:.75rem}
+.mt-xs{margin-top:.5rem}
+.mt-sm{margin-top:.85rem}
+.mt-md{margin-top:1.25rem}
+.mt-lg{margin-top:1.75rem}
+.w-full{width:100%}
+.text-center{text-align:center}
+
+/* animation init states — GSAP overrides these */
+.anim-item{opacity:0}
+
+/* Pulse animation for alert */
+@keyframes pulse-red{0%,100%{box-shadow:0 0 0 0 rgba(163,45,45,.3)}50%{box-shadow:0 0 0 8px rgba(163,45,45,0)}}
+.pulse{animation:pulse-red 2s ease-in-out 1.5s 2}
+
+/* Shake animation */
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.shake{animation:shake .4s ease 1.8s 2}
+
+/* Glow for untapped market */
+@keyframes glow-green{0%,100%{box-shadow:0 0 0 0 rgba(61,160,106,.4)}50%{box-shadow:0 0 24px 8px rgba(61,160,106,.25)}}
+.glow-anim{animation:glow-green 2s ease-in-out 1s infinite}
+
+@media (prefers-reduced-motion:reduce){
+  .anim-item{opacity:1!important;transform:none!important}
+  .sky-bar{transform:scaleY(1)!important}
+  .cmp-bar-fill{width:var(--target-w)!important}
+  @keyframes float{0%,100%{transform:none}}
+}
+</style>
+</head>
+<body>
+<div class="deck">
+  <div id="progress"></div>
+  <nav class="nav">
+    <button onclick="prev()" aria-label="Previous">‹</button>
+    <span id="counter">1 / 21</span>
+    <button onclick="next()" aria-label="Next">›</button>
+  </nav>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 1 — JUDUL
+  ══════════════════════════════════════════ -->
+  <div class="slide active" id="s0">
+    <div class="logo-mark">
+      <div class="logo-badge"><div class="logo-text">PT PEGADAIAN<br>KANWIL IV</div></div>
+    </div>
+    <div class="inner">
+      <div class="anim-item" id="s0-eye"><span class="eyebrow">Employee Advocacy · Pemasaran Digital</span></div>
+      <h1 class="hero mt-xs" id="s0-h1a" style="color:var(--c-dark)">Influencer</h1>
+      <h1 class="hero" id="s0-h1b" style="color:var(--c-mid);margin-top:-.15em">Rising Star</h1>
+      <p class="body mt-sm anim-item" id="s0-sub" style="max-width:50ch">
+        Strategi Employee Advocacy untuk Efisiensi Pemasaran Digital di Wilayah Kalimantan
+      </p>
+      <div class="hero-fmso anim-item" id="s0-fmso">
+        <div class="fmso-chip" style="background:var(--c-dark)"><span class="fmso-chip-letter">F</span><span class="fmso-chip-label">Fakta</span></div>
+        <div class="fmso-chip" style="background:var(--c-red)"><span class="fmso-chip-letter">M</span><span class="fmso-chip-label">Masalah</span></div>
+        <div class="fmso-chip" style="background:var(--c-mid)"><span class="fmso-chip-letter">S</span><span class="fmso-chip-label">Solusi</span></div>
+        <div class="fmso-chip" style="background:var(--c-gold-dk)"><span class="fmso-chip-letter">O</span><span class="fmso-chip-label">Outcomes</span></div>
+      </div>
+    </div>
+    <div class="skyline" id="s0-skyline">
+      <div class="sky-bar" style="height:35px;width:18px"></div>
+      <div class="sky-bar" style="height:55px;width:14px"></div>
+      <div class="sky-bar" style="height:70px;width:22px"></div>
+      <div class="sky-bar" style="height:45px;width:16px"></div>
+      <div class="sky-bar" style="height:80px;width:20px"></div>
+      <div class="sky-bar" style="height:60px;width:18px"></div>
+      <div class="sky-bar" style="height:90px;width:24px"></div>
+      <div class="sky-bar" style="height:50px;width:16px"></div>
+      <div class="sky-bar" style="height:75px;width:20px"></div>
+      <div class="sky-bar" style="height:40px;width:14px"></div>
+      <div class="sky-bar" style="height:65px;width:18px"></div>
+      <div class="sky-bar" style="height:85px;width:22px"></div>
+      <div class="sky-bar" style="height:55px;width:16px"></div>
+      <div class="sky-bar" style="height:70px;width:20px"></div>
+      <div class="sky-bar" style="height:45px;width:14px"></div>
+      <div class="sky-bar" style="height:80px;width:24px"></div>
+      <div class="sky-bar" style="height:60px;width:18px"></div>
+      <div class="sky-bar" style="height:90px;width:22px"></div>
+      <div class="sky-bar" style="height:50px;width:16px"></div>
+      <div class="sky-bar" style="height:35px;width:14px"></div>
+      <div class="sky-bar" style="height:72px;width:20px"></div>
+      <div class="sky-bar" style="height:48px;width:16px"></div>
+      <div class="sky-bar" style="height:83px;width:24px"></div>
+      <div class="sky-bar" style="height:58px;width:18px"></div>
+      <div class="sky-bar" style="height:68px;width:20px"></div>
+      <div class="sky-bar" style="height:42px;width:14px"></div>
+      <div class="sky-bar" style="height:76px;width:22px"></div>
+      <div class="sky-bar" style="height:52px;width:16px"></div>
+      <div class="sky-bar" style="height:88px;width:24px"></div>
+      <div class="sky-bar" style="height:44px;width:18px"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 2 — KERANGKA F-M-S-O
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s1" style="background:var(--c-light)">
+    <div class="inner">
+      <div class="anim-item text-center" id="s1-eye"><span class="eyebrow">Kerangka Presentasi</span></div>
+      <h2 class="slide-title text-center mt-xs anim-item" id="s1-title">Empat Babak Satu Narasi</h2>
+      <div class="fmso-grid mt-lg">
+        <div class="fmso-card fmso-card-f anim-item" id="s1-f">
+          <div class="fmso-big">F</div>
+          <div class="fmso-letter">F</div>
+          <div class="fmso-title">Fakta</div>
+          <div class="fmso-desc">Data objektif sebagai titik tolak analisa — tanpa asumsi, tanpa opini.</div>
+        </div>
+        <div class="fmso-card fmso-card-m anim-item" id="s1-m">
+          <div class="fmso-big">M</div>
+          <div class="fmso-letter">M</div>
+          <div class="fmso-title">Masalah</div>
+          <div class="fmso-desc">Dua blank spot dari fakta yang mengungkap pasar yang belum tergarap.</div>
+        </div>
+        <div class="fmso-card fmso-card-s anim-item" id="s1-s">
+          <div class="fmso-big">S</div>
+          <div class="fmso-letter">S</div>
+          <div class="fmso-title">Solusi</div>
+          <div class="fmso-desc">IRS memanfaatkan karyawan sebagai ujung tombak advocacy digital.</div>
+        </div>
+        <div class="fmso-card fmso-card-o anim-item" id="s1-o">
+          <div class="fmso-big">O</div>
+          <div class="fmso-letter">O</div>
+          <div class="fmso-title">Outcomes</div>
+          <div class="fmso-desc">Bukti industri, kelayakan finansial, dan roadmap implementasi nyata.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 3 — DIVIDER F
+  ══════════════════════════════════════════ -->
+  <div class="slide slide-dark" id="s2">
+    <div class="divider-ghost" id="s2-ghost">F</div>
+    <div class="divider-content">
+      <div class="divider-letter anim-item" id="s2-letter">F</div>
+      <div class="divider-word anim-item" id="s2-word">Fakta</div>
+      <div class="divider-desc anim-item" id="s2-desc">
+        Data objektif sebagai titik tolak analisa — tanpa asumsi, tanpa opini.
+        Berikut adalah kondisi riil pemasaran Pegadaian Kanwil IV Kalimantan saat ini.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 4 — SEBARAN TITIK REKLAME
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s3">
+    <div class="section-badge">F — Fakta</div>
+    <div class="inner">
+      <span class="eyebrow anim-item" id="s3-eye">Anggaran Reklame Rp3 Miliar/tahun</span>
+      <h2 class="slide-title mt-xs anim-item" id="s3-title">Sebaran 76 Titik Reklame di Kalimantan</h2>
+      <div class="grid-2 mt-md" style="align-items:start">
+        <div>
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead>
+                <tr><th>Kota</th><th>Titik</th><th>Porsi</th></tr>
+              </thead>
+              <tbody id="s3-tbody">
+                <tr class="anim-item"><td>Banjarmasin</td><td>29</td><td>38,2%</td></tr>
+                <tr class="anim-item"><td>Balikpapan</td><td>22</td><td>28,9%</td></tr>
+                <tr class="anim-item"><td>Pontianak</td><td>11</td><td>14,5%</td></tr>
+                <tr class="anim-item"><td>Tarakan</td><td>8</td><td>10,5%</td></tr>
+                <tr class="anim-item"><td>Samarinda</td><td>6</td><td>7,9%</td></tr>
+                <tr class="row-total"><td>Total</td><td>76</td><td>100%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="flex-col" style="gap:1rem">
+          <div class="grid-2" style="gap:1rem">
+            <div class="stat-card anim-item" id="s3-stat1">
+              <div class="stat-val" id="s3-c1">0</div>
+              <div class="stat-lbl">Kota tersentuh dari<br>seluruh Kalimantan</div>
+            </div>
+            <div class="stat-card anim-item" id="s3-stat2">
+              <div class="stat-val" style="font-size:clamp(1.5rem,2.8vw,2.2rem)" id="s3-c2">Rp0</div>
+              <div class="stat-lbl">Rata-rata biaya<br>per titik reklame</div>
+            </div>
+          </div>
+          <div class="alert-box pulse anim-item" id="s3-alert">
+            Di luar 5 kota ini — termasuk seluruh kabupaten pedalaman — titik reklame: <strong>NOL.</strong>
+          </div>
+          <div class="card-gold anim-item" id="s3-budget">
+            <div style="font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--c-gold-dk)">Total Anggaran Tahunan</div>
+            <div style="font-size:1.6rem;font-weight:900;color:var(--c-text);margin-top:.2rem">Rp3.000.000.000</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 5 — AWARENESS DIGITAL
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s4">
+    <div class="section-badge">F — Fakta</div>
+    <div class="inner">
+      <span class="eyebrow anim-item" id="s4-eye">Sumber Informasi Keuangan Masyarakat</span>
+      <h2 class="slide-title mt-xs anim-item" id="s4-title">Kalimantan vs. Rata-rata Nasional</h2>
+      <div class="cmp-grid mt-lg">
+        <div class="cmp-card anim-item" id="s4-c1">
+          <div class="cmp-metric">Melihat Langsung</div>
+          <div class="cmp-row"><span class="cmp-city">Kalimantan</span><span class="cmp-val">59%</span></div>
+          <div class="cmp-bar-wrap"><div class="cmp-bar-fill" style="--target-w:59%" data-target="59"></div></div>
+          <div class="cmp-vs">vs Nasional</div>
+          <div class="cmp-row"><span class="cmp-nat">Nasional</span><span class="cmp-val" style="color:var(--c-grey);font-size:1.1rem">56%</span></div>
+          <div class="cmp-bar-wrap"><div class="cmp-bar-fill" style="background:var(--c-grey);opacity:.4;--target-w:56%" data-target="56"></div></div>
+        </div>
+        <div class="cmp-card anim-item" id="s4-c2">
+          <div class="cmp-metric">Mulut ke Mulut</div>
+          <div class="cmp-row"><span class="cmp-city">Kalimantan</span><span class="cmp-val">47%</span></div>
+          <div class="cmp-bar-wrap"><div class="cmp-bar-fill" style="--target-w:47%" data-target="47"></div></div>
+          <div class="cmp-vs">vs Nasional</div>
+          <div class="cmp-row"><span class="cmp-nat">Nasional</span><span class="cmp-val" style="color:var(--c-grey);font-size:1.1rem">39%</span></div>
+          <div class="cmp-bar-wrap"><div class="cmp-bar-fill" style="background:var(--c-grey);opacity:.4;--target-w:39%" data-target="39"></div></div>
+        </div>
+        <div class="cmp-card anim-item" id="s4-c3">
+          <div class="cmp-metric">Media Konvensional</div>
+          <div class="cmp-row"><span class="cmp-city">Kalimantan</span><span class="cmp-val">44%</span></div>
+          <div class="cmp-bar-wrap"><div class="cmp-bar-fill" style="--target-w:44%" data-target="44"></div></div>
+          <div class="cmp-vs">vs Nasional</div>
+          <div class="cmp-row"><span class="cmp-nat">Nasional</span><span class="cmp-val" style="color:var(--c-grey);font-size:1.1rem">38%</span></div>
+          <div class="cmp-bar-wrap"><div class="cmp-bar-fill" style="background:var(--c-grey);opacity:.4;--target-w:38%" data-target="38"></div></div>
+        </div>
+        <div class="cmp-card is-highlight anim-item" id="s4-c4">
+          <div class="cmp-metric" style="color:var(--c-red)">Media Sosial ⚡ Gap Terbesar</div>
+          <div class="cmp-row"><span class="cmp-city">Kalimantan</span><span class="cmp-val is-alert">28%</span></div>
+          <div class="cmp-bar-wrap"><div class="cmp-bar-fill is-alert" style="--target-w:28%" data-target="28"></div></div>
+          <div class="cmp-vs">vs Nasional</div>
+          <div class="cmp-row"><span class="cmp-nat">Nasional</span><span class="cmp-val" style="color:var(--c-dark);font-size:1.1rem">48%</span></div>
+          <div class="cmp-bar-wrap"><div class="cmp-bar-fill" style="--target-w:48%" data-target="48"></div></div>
+          <div style="margin-top:.6rem;font-size:.68rem;font-weight:700;color:var(--c-red)">GAP 20 POIN ↓</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 6 — ASET BELUM DIOPTIMALKAN
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s5" style="background:var(--c-light)">
+    <div class="section-badge">F — Fakta</div>
+    <div class="inner text-center">
+      <span class="eyebrow anim-item" id="s5-eye">Aset Tersembunyi</span>
+      <h2 class="slide-title mt-xs anim-item" id="s5-title">Yang Belum Pernah Dioptimalkan</h2>
+      <div class="grid-2 mt-lg" style="gap:2rem;max-width:700px;margin:1.75rem auto 0">
+        <div class="stat-card anim-item" id="s5-s1" style="padding:2.5rem 2rem">
+          <div class="stat-val" id="s5-c1" style="font-size:clamp(3rem,7vw,5.5rem)">0</div>
+          <div class="stat-lbl" style="font-size:.8rem;margin-top:.75rem">Karyawan Pegadaian<br>Kanwil IV Kalimantan</div>
+        </div>
+        <div class="stat-card anim-item" id="s5-s2" style="padding:2.5rem 2rem">
+          <div style="font-size:2.5rem;margin-bottom:.5rem">📍</div>
+          <div style="font-size:1rem;font-weight:800;color:var(--c-dark);line-height:1.3">Termasuk<br>Pedalaman</div>
+          <div class="stat-lbl" style="font-size:.78rem;margin-top:.6rem">Karyawan hadir di titik<br>yang tidak dijangkau reklame</div>
+        </div>
+      </div>
+      <p class="body mt-md anim-item" id="s5-body" style="margin:1.25rem auto 0;text-align:center">
+        877 karyawan tersebar hingga pedalaman Kalimantan — sebuah jaringan distribusi organik<br>yang belum pernah diformalkan sebagai aset pemasaran.
+      </p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 7 — DIVIDER M
+  ══════════════════════════════════════════ -->
+  <div class="slide slide-dark" id="s6">
+    <div class="divider-ghost" id="s6-ghost">M</div>
+    <div class="divider-content">
+      <div class="divider-letter anim-item" id="s6-letter" style="color:var(--c-red)">M</div>
+      <div class="divider-word anim-item" id="s6-word">Masalah</div>
+      <div class="divider-desc anim-item" id="s6-desc">
+        Fakta di atas mengungkap <em style="color:rgba(255,255,255,.85);font-style:normal">Untapped Market</em> — pasar yang secara struktural belum tergarap.
+        Masalah ini punya dua wajah yang harus dipahami sebelum bisa diselesaikan.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 8 — BLANK SPOT GEOGRAFIS
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s7">
+    <div class="section-badge">M — Masalah #1</div>
+    <div class="inner">
+      <span class="eyebrow anim-item" id="s7-eye" style="color:var(--c-red)">Blank Spot Geografis</span>
+      <h2 class="slide-title mt-xs anim-item" id="s7-title">Reklame Rp3M Hanya Menyentuh 5 dari Puluhan Kota/Kabupaten</h2>
+      <p class="body mt-sm anim-item" id="s7-body">
+        Dari seluruh wilayah Kalimantan dengan puluhan kabupaten dan kota, anggaran reklame Rp3 miliar
+        hanya terkonsentrasi di 5 kota besar. Karyawan justru tersebar jauh lebih merata.
+      </p>
+      <div class="grid-3 mt-lg">
+        <div class="stat-card anim-item" id="s7-s1">
+          <div class="stat-val" id="s7-c1">0</div>
+          <div class="stat-lbl">Titik reklame<br>di 5 kota besar</div>
+        </div>
+        <div class="stat-card anim-item shake" id="s7-s2" style="border:2px solid var(--c-red)">
+          <div class="stat-val stat-val-red" id="s7-c2">0</div>
+          <div class="stat-lbl" style="color:var(--c-red)">Titik reklame<br>di kabupaten pedalaman</div>
+        </div>
+        <div class="stat-card anim-item" id="s7-s3" style="border:2px solid var(--c-mid);background:var(--c-light)">
+          <div class="stat-val" id="s7-c3">0</div>
+          <div class="stat-lbl">Karyawan yang justru<br>hadir sampai pedalaman</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 9 — BLANK SPOT DIGITAL
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s8">
+    <div class="section-badge">M — Masalah #2</div>
+    <div class="inner text-center">
+      <span class="eyebrow anim-item" id="s8-eye" style="color:var(--c-red)">Blank Spot Digital</span>
+      <h2 class="slide-title mt-xs anim-item" id="s8-title" style="text-align:center">Gap 20 Poin yang Terjadi DI DALAM Kota Berreklame</h2>
+      <div class="vs-wrap mt-lg">
+        <div class="vs-num anim-item" id="s8-left">
+          <div class="vs-big" style="color:var(--c-red)" id="s8-c1">0%</div>
+          <div class="vs-label" style="color:var(--c-red)">Kalimantan</div>
+          <div style="font-size:.7rem;color:var(--c-grey);margin-top:.3rem">Penetrasi media sosial</div>
+        </div>
+        <div class="vs-divider anim-item" id="s8-vs">vs</div>
+        <div class="vs-num anim-item" id="s8-right">
+          <div class="vs-big" style="color:var(--c-dark)" id="s8-c2">0%</div>
+          <div class="vs-label">Nasional</div>
+          <div style="font-size:.7rem;color:var(--c-grey);margin-top:.3rem">Penetrasi media sosial</div>
+        </div>
+      </div>
+      <div class="alert-box anim-item mt-lg" id="s8-note" style="max-width:600px;margin:1.5rem auto 0;text-align:left">
+        Gap 20 poin ini terjadi <strong>DI DALAM</strong> kota yang justru sudah punya reklame fisik senilai Rp3 miliar — bukan di pedalaman.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 10 — SINTESIS UNTAPPED MARKET
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s9">
+    <div class="section-badge">M — Sintesis</div>
+    <div class="inner">
+      <span class="eyebrow anim-item" id="s9-eye">Anatomi Masalah</span>
+      <h2 class="slide-title mt-xs anim-item" id="s9-title">Untapped Market: Dua Komponen, Satu Akar</h2>
+      <div class="eq-row mt-lg">
+        <div class="eq-box eq-box-geo anim-item" id="s9-e1">
+          <div class="eq-title">Blank Spot</div>
+          <div class="eq-val" style="color:var(--c-red)">Geografis</div>
+          <div style="font-size:.68rem;color:var(--c-grey);margin-top:.4rem">0 titik di pedalaman</div>
+        </div>
+        <div class="eq-op anim-item" id="s9-plus">+</div>
+        <div class="eq-box eq-box-dig anim-item" id="s9-e2">
+          <div class="eq-title">Blank Spot</div>
+          <div class="eq-val" style="color:var(--c-gold-dk)">Digital</div>
+          <div style="font-size:.68rem;color:var(--c-grey);margin-top:.4rem">Gap 20 poin sosmed</div>
+        </div>
+        <div class="eq-op eq-op-eq anim-item" id="s9-eq">=</div>
+        <div class="eq-box eq-box-result glow-anim anim-item" id="s9-result">
+          <div class="eq-title eq-title-white">UNTAPPED</div>
+          <div class="eq-val eq-val-white" style="font-size:1.3rem">MARKET</div>
+          <div style="font-size:.68rem;color:rgba(255,255,255,.55);margin-top:.4rem">Belum tergarap secara struktural</div>
+        </div>
+      </div>
+      <div class="grid-2 mt-lg">
+        <div class="card anim-item" id="s9-d1" style="border-left:3px solid var(--c-red)">
+          <div style="font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--c-red);margin-bottom:.4rem">Komponen 1</div>
+          <div style="font-size:.85rem;font-weight:700;color:var(--c-text)">Kabupaten pedalaman tanpa satu pun titik reklame — padahal karyawan ada di sana.</div>
+        </div>
+        <div class="card anim-item" id="s9-d2" style="border-left:3px solid var(--c-gold)">
+          <div style="font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--c-gold-dk);margin-bottom:.4rem">Komponen 2</div>
+          <div style="font-size:.85rem;font-weight:700;color:var(--c-text)">Di dalam kota ber-reklame pun, penetrasi digital 20 poin di bawah rata-rata nasional.</div>
+        </div>
+      </div>
+      <div class="banner-green mt-md anim-item" id="s9-banner">
+        877 karyawan adalah satu-satunya aset yang bisa menjawab <strong>KEDUA</strong> komponen ini sekaligus.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 11 — DIVIDER S
+  ══════════════════════════════════════════ -->
+  <div class="slide slide-dark" id="s10">
+    <div class="divider-ghost" id="s10-ghost">S</div>
+    <div class="divider-content">
+      <div class="divider-letter anim-item" id="s10-letter" style="color:var(--c-mid)">S</div>
+      <div class="divider-word anim-item" id="s10-word">Solusi</div>
+      <div class="divider-desc anim-item" id="s10-desc">
+        Bagaimana <em style="color:rgba(255,255,255,.85);font-style:normal">Influencer Rising Star</em> menjawab kedua blank spot sekaligus,
+        dengan memanfaatkan jaringan karyawan yang sudah ada.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 12 — INSIGHT STRATEGIS: FUNNEL
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s11">
+    <div class="section-badge">S — Solusi</div>
+    <div class="inner">
+      <span class="eyebrow anim-item" id="s11-eye">Social Identity Theory · Employee Advocacy</span>
+      <h2 class="slide-title mt-xs anim-item" id="s11-title">Memotong Jalur Funnel dari Ujung</h2>
+      <p class="body mt-xs anim-item" id="s11-body">
+        IRS tidak menunggu proses akuisisi organik bertahun-tahun. Karyawan memulai dari <em>Advocacy</em> —
+        langsung memperpendek funnel konvensional.
+      </p>
+      <div class="mt-md anim-item" id="s11-funnel">
+        <div class="funnel-wrap">
+          <div class="funnel-box is-active" id="fn1">Awareness</div>
+          <div class="funnel-box">Consideration</div>
+          <div class="funnel-box">Conversion</div>
+          <div class="funnel-box">Loyalty</div>
+          <div class="funnel-box is-active" id="fn5">Advocacy</div>
+        </div>
+      </div>
+      <div class="mt-sm anim-item" id="s11-arrow-wrap" style="width:100%">
+        <svg class="advocacy-svg" viewBox="0 0 900 60" preserveAspectRatio="none" overflow="visible">
+          <path id="adv-path" d="M 840 55 C 840 80 120 80 120 55" fill="none" stroke="var(--c-gold)" stroke-width="2.5" stroke-dasharray="1000" stroke-dashoffset="1000" marker-end="url(#arr)"/>
+          <defs>
+            <marker id="arr" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+              <path d="M 0 0 L 8 4 L 0 8 Z" fill="var(--c-gold)"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+      <div class="grid-2 mt-sm" style="gap:1rem">
+        <div class="card anim-item" id="s11-kary" style="border:2px solid var(--c-gold)">
+          <div class="eyebrow-gold" style="font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--c-gold-dk)">Karyawan Pegadaian (IRS)</div>
+          <div style="font-size:.85rem;font-weight:600;color:var(--c-text);margin-top:.3rem">Advocacy sejak hari pertama bergabung program.</div>
+          <div style="font-size:.72rem;color:var(--c-grey);margin-top:.3rem">877 karyawan → reach organik langsung ke komunitas masing-masing</div>
+        </div>
+        <div class="card-gold anim-item" id="s11-callout">
+          <div style="font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--c-gold-dk);margin-bottom:.4rem">Key Insight</div>
+          <div style="font-size:.85rem;font-weight:700;color:var(--c-text);line-height:1.5">
+            "Trust bawaan" karyawan lebih kuat dari paid influencer — relasi personal mengalahkan jangkauan berbayar.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 13 — PERKENALAN IRS
+  ══════════════════════════════════════════ -->
+  <div class="slide slide-forest" id="s12">
+    <div class="inner text-center" style="position:relative;z-index:2">
+      <div class="anim-item" id="s12-eye"><span class="eyebrow eyebrow-white">Program Resmi · Kanwil IV Kalimantan</span></div>
+      <h1 class="hero hero-white mt-sm anim-item" id="s12-title" style="font-size:clamp(2.5rem,6vw,5rem)">Influencer<br>Rising Star</h1>
+      <p class="body body-white mt-md anim-item" id="s12-body" style="margin:1.25rem auto 0;max-width:52ch;text-align:center;font-size:.88rem">
+        Platform terstruktur yang mengubah karyawan Pegadaian menjadi micro-influencer terverifikasi —
+        membawa brand ke setiap sudut Kalimantan dengan otentisitas yang tidak bisa dibeli.
+      </p>
+      <div class="banner-gold mt-lg anim-item" id="s12-banner" style="max-width:600px;margin:1.75rem auto 0;font-size:.9rem">
+        IRS dirancang untuk menutup <strong>KEDUA</strong> komponen Untapped Market sekaligus.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 14 — CARA KERJA: 4 LANGKAH
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s13" style="background:var(--c-light)">
+    <div class="section-badge">S — Cara Kerja</div>
+    <div class="inner">
+      <span class="eyebrow anim-item" id="s13-eye">Mekanisme Program</span>
+      <h2 class="slide-title mt-xs anim-item" id="s13-title">Empat Langkah Sederhana, Dampak Terukur</h2>
+      <div class="steps-wrapper mt-lg">
+        <div class="steps-grid">
+          <div class="step-card anim-item" id="s13-s1" style="border-top-color:var(--c-mid)">
+            <div class="step-num">01</div>
+            <div class="step-icon">📋</div>
+            <div class="step-title">Pendaftaran Akun</div>
+            <div class="step-desc">Karyawan mendaftar melalui platform IRS, profil terverifikasi HR, akun aktif dalam 24 jam.</div>
+          </div>
+          <div class="step-card anim-item" id="s13-s2" style="border-top-color:var(--c-gold)">
+            <div class="step-num">02</div>
+            <div class="step-icon">📸</div>
+            <div class="step-title">Publikasi Konten</div>
+            <div class="step-desc">Unggah konten sesuai panduan brand — edukasi keuangan, promo produk, kegiatan sosial.</div>
+          </div>
+          <div class="step-card anim-item" id="s13-s3" style="border-top-color:var(--c-dark)">
+            <div class="step-num">03</div>
+            <div class="step-icon">📊</div>
+            <div class="step-title">Klaim Performa</div>
+            <div class="step-desc">Submit screenshot performa (views, reach, engagement) untuk validasi tim program.</div>
+          </div>
+          <div class="step-card anim-item" id="s13-s4" style="border-top-color:var(--c-red)">
+            <div class="step-num">04</div>
+            <div class="step-icon">⚡</div>
+            <div class="step-title">Sync Data Real-time</div>
+            <div class="step-desc">Dashboard real-time menampilkan performa agregat, leaderboard, dan distribusi reward otomatis.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 15 — DIVIDER O
+  ══════════════════════════════════════════ -->
+  <div class="slide slide-dark" id="s14">
+    <div class="divider-ghost" id="s14-ghost">O</div>
+    <div class="divider-content">
+      <div class="divider-letter anim-item" id="s14-letter" style="color:var(--c-gold)">O</div>
+      <div class="divider-word anim-item" id="s14-word">Outcomes</div>
+      <div class="divider-desc anim-item" id="s14-desc">
+        Bukti industri, kelayakan finansial, dan roadmap yang menunjukkan
+        solusi ini layak — dan menguntungkan — untuk dijalankan.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 16 — BENCHMARK INDUSTRI
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s15">
+    <div class="section-badge">O — Bukti Industri</div>
+    <div class="inner">
+      <span class="eyebrow anim-item" id="s15-eye">Employee Advocacy · Precedent Global</span>
+      <h2 class="slide-title mt-xs anim-item" id="s15-title">Bukan Teori — Ini Sudah Terbukti</h2>
+      <div class="bench-grid mt-lg">
+        <div class="bench-card anim-item" id="s15-c1" style="border-top-color:var(--c-dark)">
+          <div class="bench-co">Cisco</div>
+          <div class="bench-val" id="s15-n1">0</div>
+          <div class="bench-metric">peningkatan engagement</div>
+          <div class="bench-note">Program Social Champions. Hasil dalam 4 bulan implementasi pertama.</div>
+        </div>
+        <div class="bench-card anim-item" id="s15-c2" style="border-top-color:var(--c-mid)">
+          <div class="bench-co">Dell</div>
+          <div class="bench-val" id="s15-n2">0</div>
+          <div class="bench-metric">juta organic reach</div>
+          <div class="bench-note">Employee Advocacy Program. Dicapai dalam 12 bulan pertama program berjalan.</div>
+        </div>
+        <div class="bench-card anim-item" id="s15-c3" style="border-top-color:var(--c-gold)">
+          <div class="bench-co">Starbucks</div>
+          <div class="bench-val" style="font-size:1.3rem">#ToBeA<br>Partner</div>
+          <div class="bench-metric">budaya organik</div>
+          <div class="bench-note">Program "Partner" membangun identitas karyawan sebagai brand ambassador alami.</div>
+        </div>
+        <div class="bench-card anim-item" id="s15-c4" style="border-top-color:var(--c-red)">
+          <div class="bench-co">Capco</div>
+          <div class="bench-val" id="s15-n4">0</div>
+          <div class="bench-metric">× vs paid media</div>
+          <div class="bench-note">Tingkat pendaftaran nasabah baru dibanding iklan berbayar setara nilai.*</div>
+        </div>
+      </div>
+      <div style="font-size:.65rem;color:var(--c-grey);margin-top:.85rem">*Angka atribusi Capco berdasarkan laporan internal; metodologi tidak dipublikasikan secara lengkap.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 17 — RENCANA INVESTASI (CAPEX)
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s16">
+    <div class="section-badge">O — Finansial</div>
+    <div class="inner">
+      <span class="eyebrow anim-item" id="s16-eye">Rencana Investasi Awal</span>
+      <h2 class="slide-title mt-xs anim-item" id="s16-title">Capital Expenditure (CapEx)</h2>
+      <div class="grid-2 mt-md" style="align-items:start;gap:2rem">
+        <div class="tbl-wrap anim-item" id="s16-tbl">
+          <table class="tbl">
+            <thead><tr><th>Komponen</th><th style="text-align:right">Estimasi</th></tr></thead>
+            <tbody>
+              <tr class="anim-item s16-row"><td>Infrastruktur Platform</td><td style="text-align:right">Rp 250.000.000</td></tr>
+              <tr class="anim-item s16-row"><td>Pelatihan SDM</td><td style="text-align:right">Rp 50.000.000</td></tr>
+              <tr class="anim-item s16-row"><td>Gamifikasi Awal</td><td style="text-align:right">Rp 30.000.000</td></tr>
+              <tr class="anim-item s16-row"><td>Tata Kelola &amp; Kepatuhan</td><td style="text-align:right">Rp 3.000.000</td></tr>
+              <tr class="anim-item s16-row"><td>Evaluasi &amp; Monitoring</td><td style="text-align:right">Rp 30.000.000</td></tr>
+              <tr class="anim-item s16-row"><td>Kontinjensi (±20%)</td><td style="text-align:right">Rp 100.000.000</td></tr>
+              <tr class="row-total"><td><strong>Total CapEx</strong></td><td style="text-align:right"><strong id="s16-total">Rp 463.000.000</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="flex-col" style="gap:1rem">
+          <div class="stat-card anim-item" id="s16-s1">
+            <div class="stat-val" style="color:var(--c-gold-dk)" id="s16-cv">Rp 0</div>
+            <div class="stat-lbl">Total investasi awal<br>(satu kali)</div>
+          </div>
+          <div class="card-gold anim-item" id="s16-note">
+            <div style="font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--c-gold-dk);margin-bottom:.35rem">Catatan</div>
+            <div style="font-size:.78rem;color:var(--c-text);line-height:1.65">
+              Legal & kepatuhan dikerjakan secara internal tanpa biaya tambahan. Angka kontinjensi sudah memperhitungkan fluktuasi vendor.
+            </div>
+          </div>
+          <div class="banner-green anim-item" id="s16-banner">
+            CapEx ini diinvestasikan sekali,<br>manfaatnya berlanjut tahunan.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 18 — POSISI IRS vs REKLAME
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s17">
+    <div class="section-badge">O — Finansial</div>
+    <div class="inner">
+      <span class="eyebrow anim-item" id="s17-eye">Posisi Anggaran</span>
+      <h2 class="slide-title mt-xs anim-item" id="s17-title">IRS Tidak Menggantikan Reklame — Melengkapinya</h2>
+      <div class="grid-2 mt-md" style="gap:1.5rem;align-items:start">
+        <div class="anim-item" id="s17-t1">
+          <div style="font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--c-grey);margin-bottom:.5rem">Biaya Operasional IRS/tahun</div>
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead><tr><th>Komponen</th><th style="text-align:right">/Tahun</th></tr></thead>
+              <tbody>
+                <tr><td>Reward Karyawan</td><td style="text-align:right">Rp 219.000.000</td></tr>
+                <tr><td>Operasional Platform</td><td style="text-align:right">Rp 120.000.000</td></tr>
+                <tr><td>Pemeliharaan Konten</td><td style="text-align:right">Rp 70.000.000</td></tr>
+                <tr><td>Monitoring &amp; Analytics</td><td style="text-align:right">Rp 60.000.000</td></tr>
+                <tr><td>Pelatihan Berkelanjutan</td><td style="text-align:right">Rp 40.000.000</td></tr>
+                <tr class="row-total"><td>Total OpEx IRS</td><td style="text-align:right">Rp 509.000.000</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="anim-item" id="s17-t2">
+          <div style="font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--c-grey);margin-bottom:.5rem">Posisi terhadap Anggaran Total</div>
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead><tr><th>Pos Anggaran</th><th style="text-align:right">Nilai</th><th style="text-align:right">%</th></tr></thead>
+              <tbody>
+                <tr><td>Reklame Fisik</td><td style="text-align:right">Rp 3.000.000.000</td><td style="text-align:right">85,5%</td></tr>
+                <tr><td>Operasional IRS</td><td style="text-align:right">Rp 509.000.000</td><td style="text-align:right">14,5%</td></tr>
+                <tr class="row-total"><td>Total Gabungan</td><td style="text-align:right">Rp 3.509.000.000</td><td style="text-align:right">100%</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="stat-card mt-sm" style="padding:1rem 1.25rem">
+            <div style="font-size:2rem;font-weight:900;color:var(--c-dark)">14,5%</div>
+            <div style="font-size:.72rem;color:var(--c-grey);margin-top:.25rem">porsi IRS dari total anggaran pemasaran</div>
+          </div>
+        </div>
+      </div>
+      <div class="banner-green mt-md anim-item" id="s17-banner">
+        Anggaran reklame fisik Rp3 miliar <strong>TIDAK DIKURANGI</strong> — IRS adalah pos tambahan, bukan pengganti.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 19 — ROI & PAYBACK
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s18">
+    <div class="section-badge">O — ROI</div>
+    <div class="inner">
+      <span class="eyebrow anim-item" id="s18-eye">Return on Investment</span>
+      <h2 class="slide-title mt-xs anim-item" id="s18-title">Payback dalam 11,7 Bulan</h2>
+      <div class="grid-2 mt-md" style="gap:1.5rem;align-items:start">
+        <div>
+          <div class="roi-chart-wrap anim-item" id="s18-chart">
+            <canvas id="roiChart"></canvas>
+          </div>
+          <div class="tbl-wrap mt-sm anim-item" id="s18-tbl">
+            <table class="tbl">
+              <thead><tr><th>Periode</th><th style="text-align:right">Manfaat</th><th style="text-align:right">Net</th></tr></thead>
+              <tbody>
+                <tr><td>Tahun 1</td><td style="text-align:right">Rp 476.700.000</td><td style="text-align:right;color:var(--c-mid);font-weight:700">+Rp 13.700.000</td></tr>
+                <tr><td>Tahun 2</td><td style="text-align:right">Rp 686.200.000</td><td style="text-align:right;color:var(--c-mid);font-weight:700">+Rp 223.200.000</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="flex-col" style="gap:1rem">
+          <div class="stat-card anim-item" id="s18-s1" style="border-top:3px solid var(--c-gold)">
+            <div class="stat-val stat-val-gold" id="s18-c1">0</div>
+            <div class="stat-lbl">bulan payback period</div>
+          </div>
+          <div class="stat-card anim-item" id="s18-s2" style="border-top:3px solid var(--c-mid)">
+            <div class="stat-val" id="s18-c2">0%</div>
+            <div class="stat-lbl">atribusi New CIF<br>dari program IRS</div>
+          </div>
+          <div class="stat-card anim-item" id="s18-s3" style="border-top:3px solid var(--c-dark)">
+            <div class="stat-val" style="font-size:1.6rem;color:var(--c-dark)">Rp 463 jt</div>
+            <div class="stat-lbl">investasi awal<br>(satu kali, tahun pertama)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 20 — ROADMAP 25:25:50
+  ══════════════════════════════════════════ -->
+  <div class="slide" id="s19" style="background:var(--c-light)">
+    <div class="section-badge">O — Roadmap</div>
+    <div class="inner">
+      <span class="eyebrow anim-item" id="s19-eye">Implementasi Bertahap · Formula 25:25:50</span>
+      <h2 class="slide-title mt-xs anim-item" id="s19-title">Roadmap 12 Bulan</h2>
+      <div class="roadmap-grid mt-lg">
+        <div class="rm-card rm-card-1 anim-item" id="s19-r1">
+          <div class="rm-pct rm-pct-1">25%</div>
+          <div class="rm-phase rm-phase-1">Fase 1</div>
+          <div class="rm-title">Validasi</div>
+          <div class="rm-range">Bulan 1 – 2</div>
+          <div class="rm-count" style="color:var(--c-mid);font-weight:700">125 Karyawan</div>
+          <ul class="rm-items mt-sm">
+            <li>Onboarding pilot group</li>
+            <li>Uji coba platform & tools</li>
+            <li>Kalibrasi reward system</li>
+            <li>Monitoring baseline metrics</li>
+          </ul>
+          <div class="rm-progress-wrap">
+            <div class="rm-progress-bar rm-progress-bar-1" data-target="25"></div>
+          </div>
+        </div>
+        <div class="rm-card rm-card-2 anim-item" id="s19-r2">
+          <div class="rm-pct rm-pct-1">25%</div>
+          <div class="rm-phase rm-phase-2">Fase 2</div>
+          <div class="rm-title">Akselerasi</div>
+          <div class="rm-range">Bulan 3 – 4</div>
+          <div class="rm-count" style="color:var(--c-dark);font-weight:700">250 Karyawan</div>
+          <ul class="rm-items mt-sm">
+            <li>Ekspansi ke seluruh cabang</li>
+            <li>Konten kampanye terstruktur</li>
+            <li>Leaderboard & gamifikasi aktif</li>
+            <li>Evaluasi mid-term pertama</li>
+          </ul>
+          <div class="rm-progress-wrap">
+            <div class="rm-progress-bar rm-progress-bar-2" data-target="25"></div>
+          </div>
+        </div>
+        <div class="rm-card rm-card-3 anim-item" id="s19-r3">
+          <div class="rm-pct rm-pct-3">50%</div>
+          <div class="rm-phase rm-phase-3">Fase 3</div>
+          <div class="rm-title rm-title-white">Dominasi</div>
+          <div class="rm-range">Bulan 5 – 12</div>
+          <div class="rm-count rm-count-white" style="color:var(--c-gold)!important;font-weight:700">877 Karyawan Full</div>
+          <ul class="rm-items rm-items-white mt-sm">
+            <li>Seluruh karyawan aktif</li>
+            <li>Integrasi ke performa KPI</li>
+            <li>Replikasi ke 4 kota lain</li>
+            <li>Laporan ROI komprehensif</li>
+          </ul>
+          <div class="rm-progress-wrap" style="background:rgba(255,255,255,.15)">
+            <div class="rm-progress-bar rm-progress-bar-3" data-target="50"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 21 — REKOMENDASI & PENUTUP
+  ══════════════════════════════════════════ -->
+  <div class="slide slide-forest" id="s20">
+    <div class="rocket">🚀</div>
+    <div class="inner" style="position:relative;z-index:2">
+      <div class="anim-item" id="s20-eye"><span class="eyebrow eyebrow-gold">Rekomendasi</span></div>
+      <h2 class="slide-title slide-title-white mt-xs anim-item" id="s20-title">Langkah Selanjutnya</h2>
+      <ul class="rec-list mt-lg" id="s20-list">
+        <li class="rec-item anim-item" id="s20-r1">
+          <div class="rec-icon">1</div>
+          <span>Validasi data jangkauan karyawan di pedalaman — inventarisasi distribusi aktual sebelum implementasi penuh.</span>
+        </li>
+        <li class="rec-item anim-item" id="s20-r2">
+          <div class="rec-icon">2</div>
+          <span>Ajukan Rp509 juta/tahun sebagai pos tersendiri dalam RKAP — pisahkan dari anggaran reklame agar tidak saling mengurangi.</span>
+        </li>
+        <li class="rec-item anim-item" id="s20-r3">
+          <div class="rec-icon">3</div>
+          <span>Lakukan validasi ulang ROI setelah fase piloting (bulan 1–4) sebelum eskalasi ke 877 karyawan penuh.</span>
+        </li>
+        <li class="rec-item anim-item" id="s20-r4">
+          <div class="rec-icon">4</div>
+          <span>Pertimbangkan replikasi ke 4 Kanwil lain jika KPI Kanwil IV terpenuhi di akhir tahun pertama.</span>
+        </li>
+      </ul>
+      <div class="mt-lg anim-item" id="s20-thanks">
+        <div style="font-size:clamp(1.5rem,3vw,2rem);font-weight:800;color:var(--c-white)">Terima Kasih.</div>
+        <div style="font-size:.78rem;color:rgba(255,255,255,.5);margin-top:.35rem">PT Pegadaian · Kanwil IV Kalimantan · Program Influencer Rising Star</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /deck -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ── PRESENTATION ENGINE ──────────────────────────────────────
+const TOTAL = 21;
+let current = 0;
+let roiChartInstance = null;
+
+const slides = Array.from(document.querySelectorAll('.slide'));
+const progressEl = document.getElementById('progress');
+const counterEl = document.getElementById('counter');
+
+function updateProgress() {
+  progressEl.style.width = ((current + 1) / TOTAL * 100) + '%';
+  counterEl.textContent = (current + 1) + ' / ' + TOTAL;
+}
+
+function goTo(n) {
+  if (n < 0 || n >= TOTAL) return;
+  gsap.killTweensOf(slides[current].querySelectorAll('.anim-item'));
+  slides[current].classList.remove('active');
+  current = n;
+  slides[current].classList.add('active');
+  updateProgress();
+  resetSlide(current);
+  animateSlide(current);
+}
+function next() { goTo(current + 1); }
+function prev() { goTo(current - 1); }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+});
+
+// ── UTILITIES ──────────────────────────────────────────────
+function fadeUp(els, delay = 0, stagger = 0.12) {
+  if (!els.length && !els.nodeType) return;
+  gsap.fromTo(els,
+    { opacity: 0, y: 24 },
+    { opacity: 1, y: 0, duration: .55, ease: 'power2.out', delay, stagger }
+  );
+}
+
+function countUp(el, end, duration = 1400, prefix = '', suffix = '') {
+  if (!el) return;
+  const startTime = performance.now();
+  function tick(now) {
+    const t = Math.min((now - startTime) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    const val = Math.round(ease * end);
+    el.textContent = prefix + val.toLocaleString('id-ID') + suffix;
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function fillBars(slide, delay = 0) {
+  const bars = slide.querySelectorAll('.cmp-bar-fill');
+  bars.forEach((bar, i) => {
+    const target = bar.dataset.target;
+    setTimeout(() => { bar.style.width = target + '%'; }, delay * 1000 + i * 120);
+  });
+}
+
+function resetSlide(idx) {
+  const s = slides[idx];
+  s.querySelectorAll('.anim-item').forEach(el => {
+    gsap.set(el, { opacity: 0, y: 0, scale: 1 });
+  });
+  s.querySelectorAll('.cmp-bar-fill').forEach(b => b.style.width = '0%');
+  s.querySelectorAll('.rm-progress-bar').forEach(b => b.style.width = '0%');
+}
+
+// ── PER-SLIDE ANIMATIONS ───────────────────────────────────
+function animateSlide(idx) {
+  const fns = [
+    animS0, animS1, animS2, animS3, animS4, animS5, animS6, animS7,
+    animS8, animS9, animS10, animS11, animS12, animS13, animS14, animS15,
+    animS16, animS17, animS18, animS19, animS20
+  ];
+  if (fns[idx]) fns[idx]();
+}
+
+// Slide 1 — Hero
+function animS0() {
+  gsap.fromTo('#s0-eye', { opacity:0, y:20 }, { opacity:1, y:0, duration:.5, ease:'power2.out', delay:.1 });
+  gsap.fromTo('#s0-h1a', { opacity:0, y:40 }, { opacity:1, y:0, duration:.65, ease:'power3.out', delay:.25 });
+  gsap.fromTo('#s0-h1b', { opacity:0, y:40 }, { opacity:1, y:0, duration:.65, ease:'power3.out', delay:.42 });
+  gsap.fromTo('#s0-sub', { opacity:0, y:20 }, { opacity:1, y:0, duration:.5, ease:'power2.out', delay:.6 });
+  gsap.fromTo('#s0-fmso', { opacity:0, y:20 }, { opacity:1, y:0, duration:.5, ease:'power2.out', delay:.8 });
+  const bars = document.querySelectorAll('.sky-bar');
+  gsap.fromTo(bars, { scaleY:0 }, { scaleY:1, duration:.8, ease:'power2.out', delay:.5, stagger:{ amount:.6, from:'random' } });
+}
+
+// Slide 2 — F-M-S-O
+function animS1() {
+  fadeUp(['#s1-eye', '#s1-title'], 0.1);
+  gsap.fromTo(['#s1-f','#s1-m','#s1-s','#s1-o'],
+    { opacity:0, y:32 }, { opacity:1, y:0, duration:.55, ease:'power2.out', delay:.3, stagger:.1 });
+}
+
+// Divider F
+function animS2() {
+  gsap.fromTo('#s2-ghost', { scale:1.15, opacity:0 }, { scale:1, opacity:1, duration:.7, ease:'power2.out' });
+  fadeUp(['#s2-letter','#s2-word','#s2-desc'], .2, .12);
+}
+
+// Slide 4 — Reklame data
+function animS3() {
+  fadeUp(['#s3-eye','#s3-title'], .1);
+  const rows = document.querySelectorAll('#s3-tbody tr.anim-item');
+  gsap.fromTo(rows, { opacity:0, x:-24 }, { opacity:1, x:0, duration:.45, ease:'power2.out', delay:.35, stagger:.08 });
+  gsap.fromTo(['#s3-stat1','#s3-stat2'], { opacity:0, y:20 }, { opacity:1, y:0, duration:.5, ease:'power2.out', delay:.7, stagger:.1 });
+  setTimeout(() => { countUp(document.getElementById('s3-c1'), 5); }, 700);
+  setTimeout(() => { document.getElementById('s3-c2').textContent = 'Rp39,5 jt'; }, 900);
+  fadeUp(['#s3-alert','#s3-budget'], 1);
+}
+
+// Slide 5 — Awareness compare
+function animS4() {
+  fadeUp(['#s4-eye','#s4-title'], .1);
+  const cards = ['#s4-c1','#s4-c2','#s4-c3','#s4-c4'];
+  gsap.fromTo(cards, { opacity:0, y:28 }, { opacity:1, y:0, duration:.5, ease:'power2.out', delay:.3, stagger:.1 });
+  fillBars(slides[4], 0.55);
+}
+
+// Slide 6 — 877 karyawan
+function animS5() {
+  fadeUp(['#s5-eye','#s5-title'], .1);
+  gsap.fromTo(['#s5-s1','#s5-s2'], { opacity:0, scale:.92, y:20 }, { opacity:1, scale:1, y:0, duration:.55, ease:'back.out(1.4)', delay:.35, stagger:.15 });
+  setTimeout(() => { countUp(document.getElementById('s5-c1'), 877, 1600); }, 400);
+  fadeUp(['#s5-body'], .7);
+}
+
+// Divider M
+function animS6() {
+  gsap.fromTo('#s6-ghost', { scale:1.15, opacity:0 }, { scale:1, opacity:1, duration:.7, ease:'power2.out' });
+  fadeUp(['#s6-letter','#s6-word','#s6-desc'], .2, .12);
+}
+
+// Slide 8 — Blank spot geo
+function animS7() {
+  fadeUp(['#s7-eye','#s7-title','#s7-body'], .1, .1);
+  gsap.fromTo(['#s7-s1','#s7-s2','#s7-s3'], { opacity:0, y:24 }, { opacity:1, y:0, duration:.5, ease:'power2.out', delay:.5, stagger:.12 });
+  setTimeout(() => { countUp(document.getElementById('s7-c1'), 76); }, 550);
+  setTimeout(() => { document.getElementById('s7-c2').textContent = '0'; }, 650);
+  setTimeout(() => { countUp(document.getElementById('s7-c3'), 877, 1600); }, 750);
+}
+
+// Slide 9 — Blank spot digital
+function animS8() {
+  fadeUp(['#s8-eye','#s8-title'], .1);
+  gsap.fromTo(['#s8-left','#s8-vs','#s8-right'], { opacity:0, y:30 }, { opacity:1, y:0, duration:.55, ease:'power2.out', delay:.3, stagger:.15 });
+  setTimeout(() => { countUp(document.getElementById('s8-c1'), 28, 1200, '', '%'); }, 450);
+  setTimeout(() => { countUp(document.getElementById('s8-c2'), 48, 1200, '', '%'); }, 450);
+  fadeUp(['#s8-note'], .9);
+}
+
+// Slide 10 — Untapped market equation
+function animS9() {
+  fadeUp(['#s9-eye','#s9-title'], .1);
+  gsap.fromTo('#s9-e1', { opacity:0, x:-30 }, { opacity:1, x:0, duration:.5, ease:'power2.out', delay:.35 });
+  gsap.fromTo('#s9-plus', { opacity:0, scale:.5 }, { opacity:1, scale:1, duration:.3, ease:'back.out(2)', delay:.65 });
+  gsap.fromTo('#s9-e2', { opacity:0, x:-30 }, { opacity:1, x:0, duration:.5, ease:'power2.out', delay:.85 });
+  gsap.fromTo('#s9-eq', { opacity:0, scale:.5 }, { opacity:1, scale:1, duration:.3, ease:'back.out(2)', delay:1.1 });
+  gsap.fromTo('#s9-result', { opacity:0, scale:.8 }, { opacity:1, scale:1, duration:.55, ease:'back.out(1.6)', delay:1.3 });
+  gsap.fromTo(['#s9-d1','#s9-d2'], { opacity:0, y:20 }, { opacity:1, y:0, duration:.45, ease:'power2.out', delay:1.7, stagger:.1 });
+  gsap.fromTo('#s9-banner', { opacity:0, y:16 }, { opacity:1, y:0, duration:.45, ease:'power2.out', delay:2 });
+}
+
+// Divider S
+function animS10() {
+  gsap.fromTo('#s10-ghost', { scale:1.15, opacity:0 }, { scale:1, opacity:1, duration:.7, ease:'power2.out' });
+  fadeUp(['#s10-letter','#s10-word','#s10-desc'], .2, .12);
+}
+
+// Slide 12 — Funnel
+function animS11() {
+  fadeUp(['#s11-eye','#s11-title','#s11-body'], .1, .1);
+  fadeUp(['#s11-funnel'], .45);
+  // Draw arrow
+  setTimeout(() => {
+    const path = document.getElementById('adv-path');
+    if (path) {
+      path.style.transition = 'stroke-dashoffset 1s ease';
+      path.style.strokeDashoffset = '0';
+    }
+    fadeUp(['#s11-kary','#s11-callout'], 0, .15);
+    gsap.fromTo(['#s11-kary','#s11-callout'], { opacity:0, y:16 }, { opacity:1, y:0, duration:.45, ease:'power2.out', stagger:.12 });
+  }, 700);
+  fadeUp(['#s11-arrow-wrap'], .5);
+}
+
+// Slide 13 — IRS intro
+function animS12() {
+  fadeUp(['#s12-eye'], .1);
+  gsap.fromTo('#s12-title', { opacity:0, scale:.9, y:20 }, { opacity:1, scale:1, y:0, duration:.65, ease:'back.out(1.4)', delay:.3 });
+  fadeUp(['#s12-body'], .65);
+  gsap.fromTo('#s12-banner', { opacity:0, y:20 }, { opacity:1, y:0, duration:.5, ease:'power2.out', delay:.9 });
+}
+
+// Slide 14 — Cara kerja
+function animS13() {
+  fadeUp(['#s13-eye','#s13-title'], .1);
+  gsap.fromTo(['#s13-s1','#s13-s2','#s13-s3','#s13-s4'],
+    { opacity:0, y:28 }, { opacity:1, y:0, duration:.5, ease:'power2.out', delay:.4, stagger:.12 });
+}
+
+// Divider O
+function animS14() {
+  gsap.fromTo('#s14-ghost', { scale:1.15, opacity:0 }, { scale:1, opacity:1, duration:.7, ease:'power2.out' });
+  fadeUp(['#s14-letter','#s14-word','#s14-desc'], .2, .12);
+}
+
+// Slide 16 — Benchmark
+function animS15() {
+  fadeUp(['#s15-eye','#s15-title'], .1);
+  gsap.fromTo(['#s15-c1','#s15-c2','#s15-c3','#s15-c4'],
+    { opacity:0, scale:.92, y:20 }, { opacity:1, scale:1, y:0, duration:.5, ease:'back.out(1.3)', delay:.35, stagger:.12 });
+  setTimeout(() => { countUp(document.getElementById('s15-n1'), 30, 1000, '', '%'); }, 450);
+  setTimeout(() => { countUp(document.getElementById('s15-n2'), 12, 1200, '', ','); }, 500);
+  setTimeout(() => { document.getElementById('s15-n2').textContent = '1,2'; }, 1800);
+  setTimeout(() => { countUp(document.getElementById('s15-n4'), 20, 1000); }, 600);
+}
+
+// Slide 17 — CapEx
+function animS16() {
+  fadeUp(['#s16-eye','#s16-title'], .1);
+  const rows = document.querySelectorAll('.s16-row');
+  gsap.fromTo(rows, { opacity:0, x:-20 }, { opacity:1, x:0, duration:.4, ease:'power2.out', delay:.35, stagger:.08 });
+  fadeUp(['#s16-s1','#s16-note','#s16-banner'], .9, .1);
+  setTimeout(() => { document.getElementById('s16-cv').textContent = 'Rp 463 jt'; }, 950);
+}
+
+// Slide 18 — Posisi IRS
+function animS17() {
+  fadeUp(['#s17-eye','#s17-title'], .1);
+  gsap.fromTo(['#s17-t1','#s17-t2'], { opacity:0, y:24 }, { opacity:1, y:0, duration:.5, ease:'power2.out', delay:.35, stagger:.15 });
+  fadeUp(['#s17-banner'], .9);
+}
+
+// Slide 19 — ROI chart
+function animS18() {
+  fadeUp(['#s18-eye','#s18-title'], .1);
+  fadeUp(['#s18-chart'], .35);
+  setTimeout(() => { buildRoiChart(); }, 400);
+  fadeUp(['#s18-tbl'], .7);
+  gsap.fromTo(['#s18-s1','#s18-s2','#s18-s3'], { opacity:0, y:20 }, { opacity:1, y:0, duration:.45, ease:'power2.out', delay:.5, stagger:.12 });
+  setTimeout(() => { countUp(document.getElementById('s18-c1'), 117, 1200, '', ''); document.getElementById('s18-c1').textContent = '11,7'; }, 550);
+  setTimeout(() => { countUp(document.getElementById('s18-c2'), 157, 1200, '', ''); document.getElementById('s18-c2').textContent = '15,7%'; }, 700);
+}
+
+function buildRoiChart() {
+  const canvas = document.getElementById('roiChart');
+  if (!canvas) return;
+  if (roiChartInstance) { roiChartInstance.destroy(); roiChartInstance = null; }
+
+  const months = Array.from({length:25}, (_,i) => i === 0 ? 'Awal' : 'Bln ' + i);
+  const cumulative = months.map((_, i) => {
+    if (i === 0) return -463;
+    if (i <= 12) return -463 + (476.7 / 12) * i;
+    return 13.7 + ((686.2 - 463) / 12) * (i - 12);
+  });
+  // Find payback (crossover near 11.7)
+  const zeroLine = months.map(() => 0);
+
+  roiChartInstance = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [{
+        label: 'Net Kumulatif (Rp juta)',
+        data: cumulative,
+        borderColor: '#3DA06A',
+        backgroundColor: (ctx) => {
+          const g = ctx.chart.ctx.createLinearGradient(0,0,0,220);
+          g.addColorStop(0,'rgba(61,160,106,.15)');
+          g.addColorStop(1,'rgba(61,160,106,0)');
+          return g;
+        },
+        borderWidth: 2.5,
+        fill: true,
+        tension: .4,
+        pointRadius: (ctx) => ctx.dataIndex % 6 === 0 ? 4 : 0,
+        pointBackgroundColor: '#1F5C34',
+      }]
+    },
+    options: {
+      animation: { duration: 1200, easing: 'easeInOutQuart' },
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => 'Rp ' + ctx.parsed.y.toFixed(1) + ' jt'
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: '#E7F3EC' }, ticks: { font: { family:'Poppins', size:9 }, color:'#6B7C73', maxTicksLimit:8 } },
+        y: {
+          grid: { color: '#E7F3EC' },
+          ticks: { font: { family:'Poppins', size:9 }, color:'#6B7C73', callback: v => 'Rp'+v+'jt' },
+          zero: true
+        }
+      }
+    }
+  });
+}
+
+// Slide 20 — Roadmap
+function animS19() {
+  fadeUp(['#s19-eye','#s19-title'], .1);
+  gsap.fromTo(['#s19-r1','#s19-r2','#s19-r3'], { opacity:0, y:32 }, { opacity:1, y:0, duration:.55, ease:'power2.out', delay:.35, stagger:.15 });
+  setTimeout(() => {
+    document.querySelectorAll('.rm-progress-bar').forEach(bar => {
+      bar.style.transition = 'width 1.5s cubic-bezier(.2,.8,.3,1)';
+      bar.style.width = bar.dataset.target + '%';
+    });
+  }, 700);
+}
+
+// Slide 21 — Penutup
+function animS20() {
+  fadeUp(['#s20-eye','#s20-title'], .1);
+  gsap.fromTo(['#s20-r1','#s20-r2','#s20-r3','#s20-r4'],
+    { opacity:0, x:-24 }, { opacity:1, x:0, duration:.5, ease:'power2.out', delay:.35, stagger:.15 });
+  fadeUp(['#s20-thanks'], 1.2);
+}
+
+// ── INIT ─────────────────────────────────────────────────
+function init() {
+  // Reset all slides to initial state except first
+  for (let i = 1; i < TOTAL; i++) resetSlide(i);
+  // Run first slide animation
+  animateSlide(0);
+  updateProgress();
+}
+
+// Ensure GSAP is loaded
+if (typeof gsap !== 'undefined') { init(); }
+else { window.addEventListener('load', init); }
+</script>
+</body>
+</html>
