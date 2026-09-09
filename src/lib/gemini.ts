@@ -5,7 +5,18 @@
 // Model: gemini-3.6-flash
 // =========================================================================
 
+import { getGeminiApiKey } from '@/lib/env'
+
 export type GeminiVisionResult = {
+  /**
+   * Menandakan apakah pemeriksaan AI benar-benar berhasil dijalankan.
+   *
+   * Bernilai false ketika API key tidak tersedia, gambar gagal diunduh, atau
+   * layanan Gemini mengembalikan error. Pemanggil WAJIB memeriksa field ini
+   * sebelum menyetujui postingan secara otomatis: hasil yang tidak tersedia
+   * berarti "belum diperiksa", bukan "lolos pemeriksaan".
+   */
+  available: boolean
   isValidPegadaianContent: boolean
   confidence: number // 0.0 - 1.0
   detectedElements: string[]
@@ -19,14 +30,19 @@ export async function analyzeContentWithGeminiVision(
   imageSource: { url?: string; buffer?: Buffer; mimeType?: string },
   captionText?: string
 ): Promise<GeminiVisionResult> {
-  const apiKey = process.env.GEMINI_API_KEY
+  const apiKey = getGeminiApiKey()
   if (!apiKey) {
-    console.warn('GEMINI_API_KEY is not configured. Falling back to permissive check.')
+    // GAGAL-TERTUTUP. Sebelumnya fungsi ini mengembalikan isValidPegadaianContent: true
+    // ketika API key tidak ada, sehingga postingan bisa disetujui otomatis tanpa
+    // pernah diperiksa. Sekarang hasilnya ditandai tidak tersedia, dan pemanggil
+    // mengalihkan postingan ke antrean review admin.
+    console.warn('GEMINI_API_KEY tidak terkonfigurasi. Verifikasi AI dilewati, dialihkan ke review admin.')
     return {
-      isValidPegadaianContent: true,
-      confidence: 0.5,
-      detectedElements: ['API Key Not Set'],
-      reason: 'Pemeriksaan visual AI dilewati karena konfigurasi API key belum tersedia.',
+      available: false,
+      isValidPegadaianContent: false,
+      confidence: 0.0,
+      detectedElements: [],
+      reason: 'Pemeriksaan visual AI tidak tersedia (API key belum dikonfigurasi). Postingan diteruskan ke review admin.',
     }
   }
 
@@ -56,6 +72,7 @@ export async function analyzeContentWithGeminiVision(
         console.error('Error fetching image for Gemini Vision:', fetchErr.message)
         // Jika gagal mengunduh gambar dari Instagram CDN (misal link expired), berikan fallback
         return {
+          available: false,
           isValidPegadaianContent: false,
           confidence: 0.0,
           detectedElements: [],
@@ -66,6 +83,7 @@ export async function analyzeContentWithGeminiVision(
 
     if (!base64Data) {
       return {
+        available: false,
         isValidPegadaianContent: false,
         confidence: 0.0,
         detectedElements: [],
@@ -146,6 +164,7 @@ Kembalikan respon HANYA dalam format JSON valid tanpa markdown formatting:
     const parsed = JSON.parse(cleanJson)
 
     return {
+      available: true,
       isValidPegadaianContent: Boolean(parsed.isValidPegadaianContent),
       confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.8,
       detectedElements: Array.isArray(parsed.detectedElements) ? parsed.detectedElements : [],
@@ -155,6 +174,7 @@ Kembalikan respon HANYA dalam format JSON valid tanpa markdown formatting:
     console.error('Error in analyzeContentWithGeminiVision:', error.message)
     // Fallback: Jika terjadi error tak terduga pada AI service, return low confidence
     return {
+      available: false,
       isValidPegadaianContent: false,
       confidence: 0.0,
       detectedElements: ['AI Analysis Error'],

@@ -3,6 +3,7 @@
 import { createClient as createSSRClient } from '@/lib/supabase/server'
 import { createClient as createBaseClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
+import { featureFlags, getApifyToken } from '@/lib/env'
 
 // Standalone client to register users in Auth without altering current session cookies
 function getStandaloneClient() {
@@ -468,7 +469,17 @@ export async function syncEmployeeEngagement(employeeId: string) {
       return { success: true, message: 'Karyawan ini belum memiliki postingan Instagram terverifikasi (Approved).' }
     }
 
-    const apifyToken = process.env.APIFY_TOKEN
+    // GERBANG REMEDIASI LEGAL (Fase 0) — lihat docs/REMEDIASI_LEGAL_IRS.md
+    if (!featureFlags.apifyScraping) {
+      return {
+        success: false,
+        error:
+          'Sinkronisasi engagement dinonaktifkan sementara selama penyesuaian sistem ke API resmi Instagram. ' +
+          'Data engagement yang sudah tersimpan tetap dapat dilihat seperti biasa.',
+      }
+    }
+
+    const apifyToken = getApifyToken()
     if (!apifyToken) {
       return { success: false, error: 'APIFY_TOKEN belum terkonfigurasi di server.' }
     }

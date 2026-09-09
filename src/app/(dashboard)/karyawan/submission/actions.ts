@@ -10,6 +10,15 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { analyzeContentWithGeminiVision } from '@/lib/gemini'
+import { featureFlags, getApifyToken } from '@/lib/env'
+
+// Pesan yang ditampilkan ketika Verifikasi Otomatis tidak tersedia karena
+// pengambilan data lewat scraper pihak ketiga sudah dinonaktifkan (Fase 0
+// remediasi legal). Jalur Verifikasi Manual tetap berfungsi penuh dan
+// memberikan poin yang sama.
+const SCRAPING_DISABLED_MESSAGE =
+  'Verifikasi Otomatis sedang dinonaktifkan sementara selama penyesuaian sistem ke API resmi Instagram. ' +
+  'Silakan gunakan Verifikasi Manual dengan mengunggah tangkapan layar postingan Anda — poin yang diberikan sama.'
 
 export type SubmissionFormState = {
   success?: boolean
@@ -143,12 +152,21 @@ export async function getDailyQuota() {
 //           Instagram secara live menggunakan Apify Scraper di backend.
 // =========================================================================
 export async function scrapeInstagramPost(postUrl: string, expectedHandle: string) {
-  const apifyToken = process.env.APIFY_TOKEN
   const targetShortcode = extractInstagramShortcode(postUrl)
   const cleanExpected = cleanHandle(expectedHandle)
 
+  // GERBANG REMEDIASI LEGAL (Fase 0)
+  // Scraping pihak ketiga melanggar Ketentuan Layanan Meta dan mengambil data
+  // pribadi tanpa dasar pemrosesan yang sah. Dinonaktifkan sampai migrasi ke
+  // Instagram Graph API dengan OAuth selesai. Lihat docs/REMEDIASI_LEGAL_IRS.md
+  if (!featureFlags.apifyScraping && !featureFlags.mockScraper) {
+    return { success: false, error: SCRAPING_DISABLED_MESSAGE }
+  }
+
+  const apifyToken = getApifyToken()
+
   // 1. JALUR PRODUKSI: Mengaktifkan pemanggilan ke Aktor Apify
-  if (apifyToken) {
+  if (featureFlags.apifyScraping && apifyToken) {
     try {
       console.log('Running Apify Instagram Post Scraper for URL:', postUrl)
       const { ApifyClient } = await import('apify-client')
@@ -240,7 +258,16 @@ export async function scrapeInstagramPost(postUrl: string, expectedHandle: strin
   }
 
   // 2. JALUR PENGEMBANGAN LOKAL (MOCK MODE):
-  // Menyimulasikan scraper secara akurat tanpa membypass validasi akun
+  // Menyimulasikan scraper secara akurat tanpa membypass validasi akun.
+  //
+  // Mode ini mengembalikan metrik karangan. Dulu ia menyala otomatis setiap kali
+  // APIFY_TOKEN tidak ada — termasuk di produksi bila variabelnya hilang — sehingga
+  // poin bisa diberikan atas data yang tidak pernah diverifikasi. Sekarang mode ini
+  // harus dinyalakan eksplisit dan tidak pernah aktif di produksi (lihat lib/env.ts).
+  if (!featureFlags.mockScraper) {
+    return { success: false, error: SCRAPING_DISABLED_MESSAGE }
+  }
+
   console.log('Using Dynamic Mock Scraper Mode...')
   await new Promise((resolve) => setTimeout(resolve, 1000))
 
@@ -444,6 +471,13 @@ export async function submitPost(formData: FormData): Promise<SubmissionFormStat
     // JALUR A: METODE VERIFIKASI OTOMATIS (Instagram Scraping + Gemini Vision)
     // =========================================================================
     if (verifyMethod === 'auto') {
+      // Jalur ini bergantung pada pengambilan data Instagram yang dinonaktifkan
+      // pada Fase 0 remediasi legal. Dicegat di sini supaya karyawan langsung
+      // mendapat arahan yang jelas, bukan pesan kegagalan teknis.
+      if (!featureFlags.apifyScraping && !featureFlags.mockScraper) {
+        return { error: SCRAPING_DISABLED_MESSAGE }
+      }
+
       if (platform !== 'instagram') {
         return { error: 'Verifikasi Otomatis saat ini baru tersedia untuk platform Instagram.' }
       }
@@ -499,6 +533,7 @@ export async function submitPost(formData: FormData): Promise<SubmissionFormStat
 
       // 6. VALIDASI MULTIMODAL AI VISION (Google Gemini Vision API)
       let aiValidationResult = {
+        available: true,
         isValidPegadaianContent: true,
         confidence: 1.0,
         detectedElements: [] as string[],
@@ -766,7 +801,14 @@ export async function submitPost(formData: FormData): Promise<SubmissionFormStat
     }
 
     const screenshotUrl = uploadData?.path
-    const finalStatus = isApprovedByOCR && geminiScreenshotRes.isValidPegadaianContent ? 'approved' : 'pending'
+
+    // GAGAL-TERTUTUP: persetujuan otomatis hanya diberikan bila pemeriksaan AI
+    // benar-benar berjalan. Ketika layanan AI tidak tersedia, postingan masuk
+    // antrean review admin — bukan disetujui tanpa pernah diperiksa.
+    const finalStatus =
+      isApprovedByOCR && geminiScreenshotRes.available && geminiScreenshotRes.isValidPegadaianContent
+        ? 'approved'
+        : 'pending'
 
     // 4. Buat entri postingan baru
     const { data: newPost, error: dbErr } = await supabase
@@ -859,7 +901,9 @@ export async function submitPost(formData: FormData): Promise<SubmissionFormStat
         const adminNotifications = admins.map((admin: any) => ({
           user_id: admin.id,
           type: 'post_submitted',
-          message: `${profile.nama} mengirimkan postingan baru untuk verifikasi manual admin (AI Fallback).`,
+          message: geminiScreenshotRes.available
+            ? `${profile.nama} mengirimkan postingan baru untuk verifikasi manual admin.`
+            : `${profile.nama} mengirimkan postingan baru. Pemeriksaan AI tidak tersedia, perlu ditinjau admin.`,
         }))
         await supabase.from('notifications').insert(adminNotifications)
       }

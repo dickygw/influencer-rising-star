@@ -2,6 +2,13 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { featureFlags, getApifyToken } from '@/lib/env'
+
+// Pesan untuk fitur yang bergantung pada scraper pihak ketiga. Scraper tersebut
+// dinonaktifkan pada Fase 0 remediasi legal — lihat docs/REMEDIASI_LEGAL_IRS.md
+const SCRAPING_DISABLED_MESSAGE =
+  'Fitur ini dinonaktifkan sementara selama penyesuaian sistem ke API resmi Instagram. ' +
+  'Data engagement yang sudah tersimpan tetap dapat dilihat seperti biasa.'
 
 // Helper: Verifikasi bahwa user adalah Admin Kanwil/Pusat yang berhak
 async function getAdminContext() {
@@ -598,7 +605,12 @@ export async function verifyKanwilBioLinks(selectedCabangId?: string) {
       return { success: true, message: 'Tidak ada akun Instagram karyawan yang perlu diperiksa.' }
     }
 
-    const apifyToken = process.env.APIFY_TOKEN
+    // GERBANG REMEDIASI LEGAL (Fase 0) — lihat docs/REMEDIASI_LEGAL_IRS.md
+    if (!featureFlags.apifyScraping) {
+      return { success: false, error: SCRAPING_DISABLED_MESSAGE }
+    }
+
+    const apifyToken = getApifyToken()
     let verifiedCount = 0
 
     if (apifyToken) {
@@ -715,7 +727,12 @@ export async function syncAllKanwilEngagement(selectedCabangId?: string) {
       return { success: true, message: 'Tidak ada postingan Instagram terverifikasi yang perlu disinkronkan.' }
     }
 
-    const apifyToken = process.env.APIFY_TOKEN
+    // GERBANG REMEDIASI LEGAL (Fase 0) — lihat docs/REMEDIASI_LEGAL_IRS.md
+    if (!featureFlags.apifyScraping) {
+      return { success: false, error: SCRAPING_DISABLED_MESSAGE }
+    }
+
+    const apifyToken = getApifyToken()
     let updatedCount = 0
 
     if (apifyToken) {
